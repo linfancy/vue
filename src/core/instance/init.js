@@ -27,6 +27,7 @@ export function initMixin (Vue: Class<Component>) {
     }
 
     // a flag to avoid this being observed
+    // 如果是Vue的实例，则不需要被observe
     vm._isVue = true
     // merge options
     if (options && options._isComponent) {
@@ -35,13 +36,16 @@ export function initMixin (Vue: Class<Component>) {
       // internal component options needs special treatment.
       initInternalComponent(vm, options)
     } else {
+      //mergeOptions主要分成两块，就是resolveConstructorOptions(vm.constructor)和options，mergeOptions这个函数的功能就是要把这两个合在一起。options是我们通过new Vue(options)实例化传入的
       vm.$options = mergeOptions(
+        //解析构造函数的options
         resolveConstructorOptions(vm.constructor),
         options || {},
         vm
       )
     }
     /* istanbul ignore else */
+    // 第二步： renderProxy
     if (process.env.NODE_ENV !== 'production') {
       initProxy(vm)
     } else {
@@ -49,11 +53,14 @@ export function initMixin (Vue: Class<Component>) {
     }
     // expose real self
     vm._self = vm
+    // 第三步： vm的生命周期相关变量初始化
     initLifecycle(vm)
+    // 第四步： vm的事件监听初始化
     initEvents(vm)
     initRender(vm)
     callHook(vm, 'beforeCreate')
     initInjections(vm) // resolve injections before data/props
+    // 第五步： vm的状态初始化，prop/data/computed/method/watch都在这里完成初始化，因此也是Vue实例create的关键。
     initState(vm)
     initProvide(vm) // resolve provide after data/props
     callHook(vm, 'created')
@@ -64,7 +71,7 @@ export function initMixin (Vue: Class<Component>) {
       mark(endTag)
       measure(`vue ${vm._name} init`, startTag, endTag)
     }
-
+    // 第六步：render & mount
     if (vm.$options.el) {
       vm.$mount(vm.$options.el)
     }
@@ -89,7 +96,7 @@ export function initInternalComponent (vm: Component, options: InternalComponent
     opts.staticRenderFns = options.staticRenderFns
   }
 }
-
+//功能应该是解析构造函数的options
 export function resolveConstructorOptions (Ctor: Class<Component>) {
   let options = Ctor.options
   if (Ctor.super) {
