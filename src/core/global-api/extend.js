@@ -33,8 +33,20 @@ export function initExtend (Vue: GlobalAPI) {
     const Sub = function VueComponent (options) {
       this._init(options)
     }
+    /**
+     * 继承：
+     * 这里可以解析为:
+     * Super == Vue;
+     * Super.prototype == Vue.prototype
+     * Object.create(Super.prototype) === new Super();
+     * Sub.prototype = Object.create(Super.prototype) === Sub.prototype = new Super();
+     *  */
+
     Sub.prototype = Object.create(Super.prototype)
+    //这个时候Sub.prototype.constructor 指向的是Super
     Sub.prototype.constructor = Sub
+    //除了constructor，其他属性继承父类Super
+
     Sub.cid = cid++
     Sub.options = mergeOptions(
       Super.options,

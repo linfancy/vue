@@ -22,14 +22,17 @@ import {
 } from 'shared/util'
 
 /**
+ * option 重写策略
  * Option overwriting strategies are functions that handle
+ * 用于合并一个父option与子option的值
  * how to merge a parent option value and a child option
  * value into the final value.
  */
+//config.js中定义了strats的类型为 optionMergeStrategies: { [key: string]: Function };
 const strats = config.optionMergeStrategies
 
 /**
- * Options with restrictions
+ * Options with restrictions 限制规定
  */
 if (process.env.NODE_ENV !== 'production') {
   strats.el = strats.propsData = function (parent, child, vm, key) {
@@ -158,7 +161,7 @@ function mergeHook (
     ? dedupeHooks(res)
     : res
 }
-
+//挂钩去重
 function dedupeHooks (hooks) {
   const res = []
   for (let i = 0; i < hooks.length; i++) {
@@ -397,9 +400,13 @@ export function mergeOptions (
   if (typeof child === 'function') {
     child = child.options
   }
-
+  // 统一props格式
   normalizeProps(child, vm)
+
+  // 统一inject的格式
   normalizeInject(child, vm)
+
+  // 统一directives的格式
   normalizeDirectives(child)
 
   // Apply extends and mixins on the child options,
@@ -407,16 +414,20 @@ export function mergeOptions (
   // the result of another mergeOptions call.
   // Only merged options has the _base property.
   if (!child._base) {
+    // 如果存在child.extends
     if (child.extends) {
       parent = mergeOptions(parent, child.extends, vm)
     }
+
+    //如果存在child.mixins
     if (child.mixins) {
       for (let i = 0, l = child.mixins.length; i < l; i++) {
         parent = mergeOptions(parent, child.mixins[i], vm)
       }
     }
   }
-
+  // 针对不同的键值，采用不同的merge策略
+  //采取了对不同的field采取不同的策略，Vue提供了一个strats对象，其本身就是一个hook,如果strats有提供特殊的逻辑，就走strats,否则走默认merge逻辑。
   const options = {}
   let key
   for (key in parent) {

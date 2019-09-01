@@ -37,6 +37,7 @@ export function initMixin (Vue: Class<Component>) {
       initInternalComponent(vm, options)
     } else {
       //mergeOptions主要分成两块，就是resolveConstructorOptions(vm.constructor)和options，mergeOptions这个函数的功能就是要把这两个合在一起。options是我们通过new Vue(options)实例化传入的
+      //vm.$options 用于当前 Vue 实例的初始化选项。需要在选项中包含自定义属性时会有用处：
       vm.$options = mergeOptions(
         //解析构造函数的options
         resolveConstructorOptions(vm.constructor),
@@ -99,9 +100,13 @@ export function initInternalComponent (vm: Component, options: InternalComponent
 //功能应该是解析构造函数的options
 export function resolveConstructorOptions (Ctor: Class<Component>) {
   let options = Ctor.options
+  //使用Ctor.super判断是否为Vue的子类
   if (Ctor.super) {
+    //根类的options
     const superOptions = resolveConstructorOptions(Ctor.super)
     const cachedSuperOptions = Ctor.superOptions
+
+    //当为Vue混入一些options时，superOptions会发生变化，此时于之前子类中存储的cachedSuperOptions已经不等，所以下面的操作主要就是更新sub.superOptions
     if (superOptions !== cachedSuperOptions) {
       // super option changed,
       // need to resolve new options.
