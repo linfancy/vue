@@ -14,6 +14,7 @@ let uid = 0
 
 export function initMixin (Vue: Class<Component>) {
   Vue.prototype._init = function (options?: Object) {
+    //this指向Vue
     const vm: Component = this
     // a uid
     vm._uid = uid++
@@ -48,21 +49,28 @@ export function initMixin (Vue: Class<Component>) {
     /* istanbul ignore else */
     // 第二步： renderProxy
     if (process.env.NODE_ENV !== 'production') {
+      //作用域代理，拦截组件内访问其它组件的数据。
       initProxy(vm)
     } else {
       vm._renderProxy = vm
     }
     // expose real self
     vm._self = vm
-    // 第三步： vm的生命周期相关变量初始化
+    // 第三步： vm的生命周期相关变量初始化,建立父子组件关系，在当前实例上添加一些属性和生命周期标识。如：$children、$refs、_isMounted等。
     initLifecycle(vm)
-    // 第四步： vm的事件监听初始化
-    initEvents(vm)
+    // 第四步： vm的事件监听初始化,用来存放除(@hook:生命周期钩子名称="绑定的函数")事件的对象。如：$on、$emit等。
+    initEvents(vm);
+    // 第五步:用于初始化$slots、$attrs、$listeners
     initRender(vm)
-    callHook(vm, 'beforeCreate')
+    callHook(vm, 'beforeCreate');
+    /**
+     * 第六步:初始化inject，一般用于更深层次的组件通信，相当于加强版的props。用于组件库开发较多。
+     * 只要在上一层级的声明的provide，那么下一层级无论多深都能够通过inject来访问到provide的数据。这么做也是有明显的缺点：在任意层级都能访问，导致数据追踪比较困难，不知道是哪一个层级声明了这个或者不知道哪一层级或若干个层级使用。
+     */
     initInjections(vm) // resolve injections before data/props
-    // 第五步： vm的状态初始化，prop/data/computed/method/watch都在这里完成初始化，因此也是Vue实例create的关键。
+    // 第七步： vm的状态初始化，prop/data/computed/method/watch都在这里完成初始化，因此也是Vue实例create的关键。
     initState(vm)
+    // 第八步：初始化provide
     initProvide(vm) // resolve provide after data/props
     callHook(vm, 'created')
 

@@ -2,7 +2,22 @@
 // 这里应该是我们 Vue 核心方法
 import Vue from './instance/index'
 
-// 根据命名，应该可以猜出这里是初始化一些全局API
+
+/**
+ * 初始化一些全局API
+    Vue.extend
+    Vue.nextTick
+    Vue.set
+    Vue.delete
+    Vue.directive
+    Vue.filter
+    Vue.component
+    Vue.use
+    Vue.mixin
+    Vue.compile
+    Vue.observable
+    Vue.version
+ */
 import { initGlobalAPI } from './global-api/index'
 
 // 根据命名，这里应该是获取一个Boolean类型的变量，来判断是不是ssr

@@ -131,6 +131,9 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
 
 /**
  * Define a reactive property on an Object.
+ * Vue首先会调用所有使用的数据，从而触发所有的 getter 函数，进而通过Dep对象收集所有响应式依赖，调用所有Watcher执行Render 操作，其中会进行虚拟Dom的存储和比较，进而渲染页面。
+
+    当有数据变更时会触发 setter 函数，触发dep.notify()，进而调用Watcher的update，推入Vue的异步观察队列中，最终调用Watch的getter或者cb方法进而调用vm._update(),再调用vm__patch__方法进行虚拟DOM的diff，并最终渲染到页面。
  */
 export function defineReactive (
   obj: Object,
@@ -139,9 +142,25 @@ export function defineReactive (
   customSetter?: ?Function,
   shallow?: boolean
 ) {
+  //创建dep对象手机依赖
   const dep = new Dep()
+  /**
+   * Object.getOwnPropertyDescriptor(obj, prop)方法返回指定对象上一个自有属性对应的属性描述符.
+   * 比如：
+   * let person = {
+        sex : "male",
+        age : 25,
+        sayHi : function () {
+            console.log("sayHi");
+        }
+    };
 
+    let ageAttri = Object.getOwnPropertyDescriptor(person, "age");
+    console.log("ageAttri: " + JSON.stringify(ageAttri));
+   * ageAttri: {"value":25,"writable":true,"enumerable":true,"configurable":true}
+   */
   const property = Object.getOwnPropertyDescriptor(obj, key)
+  // configurable:描述属性是否配置，以及可否删除
   if (property && property.configurable === false) {
     return
   }
@@ -159,10 +178,11 @@ export function defineReactive (
     configurable: true,
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
+      // Dep.target 全局的target参数，值为vue初始化的Watcher对象
       if (Dep.target) {
-        dep.depend()
+        dep.depend() //收集依赖，确保只有使用了的值才会被收集
         if (childOb) {
-          childOb.dep.depend()
+          childOb.dep.depend() //收集依赖，确保只有使用了的值才会被收集
           if (Array.isArray(value)) {
             dependArray(value)
           }
@@ -187,8 +207,8 @@ export function defineReactive (
       } else {
         val = newVal
       }
-      childOb = !shallow && observe(newVal)
-      dep.notify()
+      childOb = !shallow && observe(newVal) //新加的数据转换为可观察者对象
+      dep.notify() //通知Watcher更新操作
     }
   })
 }
@@ -204,15 +224,18 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
   ) {
     warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
+  //判断是否是array && 合法数组index
   if (Array.isArray(target) && isValidArrayIndex(key)) {
     target.length = Math.max(target.length, key)
     target.splice(key, 1, val)
     return val
   }
+  //判断是否是对象且不是Object的默认属性
   if (key in target && !(key in Object.prototype)) {
     target[key] = val
     return val
   }
+  //判断是否是vue
   const ob = (target: any).__ob__
   if (target._isVue || (ob && ob.vmCount)) {
     process.env.NODE_ENV !== 'production' && warn(
@@ -225,6 +248,8 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
     target[key] = val
     return val
   }
+  // defineReactive方法会改造getter setter方法来收集依赖和通知watcher
+  // Dep 主要起到一个纽带的作用，就是连接 reactive data 与 watcher，每一个 reactive data 的创建，都会随着创建一个 dep 实例。
   defineReactive(ob.value, key, val)
   ob.dep.notify()
   return val

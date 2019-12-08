@@ -74,7 +74,13 @@ if (process.env.NODE_ENV !== 'production') {
       return target[key]
     }
   }
-
+  /**
+   * Proxy用于修改某些操作的默认行为，等同与在语言层面做出修改，即对编程语言进行编程。
+    Proxy 可以理解成，在目标对象之前架设一层“拦截”，外界对该对象的访问，都必须先通过这层拦截，因此提供了一种机制，可以对外界的访问进行过滤和改写。Proxy 这个词的原意是代理，用在这里表示由它来“代理”某些操作，可以译为“代理器”。
+    Vue3.0 中将会通过 Proxy 来替换原本的 Object.defineProperty 来实现数据响应式。
+    之所以 Vue3.0 要使用 Proxy 替换原本的 API 原因在于 Proxy 无需一层层递归为每个属性添加代理，一次即可完成以上操作，性能上更好，并且原本的实现有一些数据更新不能监听到，但是 Proxy 可以完美监听到任何方式的数据改变，唯一缺陷可能就是浏览器的兼容性不好了。
+    https://segmentfault.com/a/1190000014824359
+  */
   initProxy = function initProxy (vm) {
     if (hasProxy) {
       // determine which proxy handler to use

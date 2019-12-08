@@ -1146,14 +1146,17 @@
   /*  */
 
   /**
+   * option 重写策略
    * Option overwriting strategies are functions that handle
+   * 用于合并一个父option与子option的值
    * how to merge a parent option value and a child option
    * value into the final value.
    */
+  //config.js中定义了strats的类型为 optionMergeStrategies: { [key: string]: Function };
   var strats = config.optionMergeStrategies;
 
   /**
-   * Options with restrictions
+   * Options with restrictions 限制规定
    */
   {
     strats.el = strats.propsData = function (parent, child, vm, key) {
@@ -1282,7 +1285,7 @@
       ? dedupeHooks(res)
       : res
   }
-
+  //挂钩去重
   function dedupeHooks (hooks) {
     var res = [];
     for (var i = 0; i < hooks.length; i++) {
@@ -1521,9 +1524,13 @@
     if (typeof child === 'function') {
       child = child.options;
     }
-
+    // 统一props格式
     normalizeProps(child, vm);
+
+    // 统一inject的格式
     normalizeInject(child, vm);
+
+    // 统一directives的格式
     normalizeDirectives(child);
 
     // Apply extends and mixins on the child options,
@@ -1531,16 +1538,20 @@
     // the result of another mergeOptions call.
     // Only merged options has the _base property.
     if (!child._base) {
+      // 如果存在child.extends
       if (child.extends) {
         parent = mergeOptions(parent, child.extends, vm);
       }
+
+      //如果存在child.mixins
       if (child.mixins) {
         for (var i = 0, l = child.mixins.length; i < l; i++) {
           parent = mergeOptions(parent, child.mixins[i], vm);
         }
       }
     }
-
+    // 针对不同的键值，采用不同的merge策略
+    //采取了对不同的field采取不同的策略，Vue提供了一个strats对象，其本身就是一个hook,如果strats有提供特殊的逻辑，就走strats,否则走默认merge逻辑。
     var options = {};
     var key;
     for (key in parent) {
@@ -2026,7 +2037,7 @@
       warn(
         "Property \"" + key + "\" must be accessed with \"$data." + key + "\" because " +
         'properties starting with "$" or "_" are not proxied in the Vue instance to ' +
-        'prevent conflicts with Vue internals' +
+        'prevent conflicts with Vue internals. ' +
         'See: https://vuejs.org/v2/api/#data',
         target
       );
@@ -2909,7 +2920,7 @@
       if (typeof key === 'string' && key) {
         baseObj[values[i]] = values[i + 1];
       } else if (key !== '' && key !== null) {
-        // null is a speical value for explicitly removing a binding
+        // null is a special value for explicitly removing a binding
         warn(
           ("Invalid value for dynamic directive argument (expected string or null): " + key),
           this
@@ -3404,6 +3415,12 @@
       ns = (context.$vnode && context.$vnode.ns) || config.getTagNamespace(tag);
       if (config.isReservedTag(tag)) {
         // platform built-in elements
+        if (isDef(data) && isDef(data.nativeOn)) {
+          warn(
+            ("The .native modifier for v-on is only valid on components but it was used on <" + tag + ">."),
+            context
+          );
+        }
         vnode = new VNode(
           config.parsePlatformTagName(tag), data, children,
           undefined, undefined, context
@@ -3529,7 +3546,7 @@
       // render self
       var vnode;
       try {
-        // There's no need to maintain a stack becaues all render fns are called
+        // There's no need to maintain a stack because all render fns are called
         // separately from one another. Nested component's render fns are called
         // when parent component is patched.
         currentRenderingInstance = vm;
@@ -4957,6 +4974,7 @@
       }
 
       // a flag to avoid this being observed
+      // 如果是Vue的实例，则不需要被observe
       vm._isVue = true;
       // merge options
       if (options && options._isComponent) {
@@ -4965,23 +4983,30 @@
         // internal component options needs special treatment.
         initInternalComponent(vm, options);
       } else {
+        //mergeOptions主要分成两块，就是resolveConstructorOptions(vm.constructor)和options，mergeOptions这个函数的功能就是要把这两个合在一起。options是我们通过new Vue(options)实例化传入的
+        //vm.$options 用于当前 Vue 实例的初始化选项。需要在选项中包含自定义属性时会有用处：
         vm.$options = mergeOptions(
+          //解析构造函数的options
           resolveConstructorOptions(vm.constructor),
           options || {},
           vm
         );
       }
       /* istanbul ignore else */
+      // 第二步： renderProxy
       {
         initProxy(vm);
       }
       // expose real self
       vm._self = vm;
+      // 第三步： vm的生命周期相关变量初始化
       initLifecycle(vm);
+      // 第四步： vm的事件监听初始化
       initEvents(vm);
       initRender(vm);
       callHook(vm, 'beforeCreate');
       initInjections(vm); // resolve injections before data/props
+      // 第五步： vm的状态初始化，prop/data/computed/method/watch都在这里完成初始化，因此也是Vue实例create的关键。
       initState(vm);
       initProvide(vm); // resolve provide after data/props
       callHook(vm, 'created');
@@ -4992,7 +5017,7 @@
         mark(endTag);
         measure(("vue " + (vm._name) + " init"), startTag, endTag);
       }
-
+      // 第六步：render & mount
       if (vm.$options.el) {
         vm.$mount(vm.$options.el);
       }
@@ -5017,12 +5042,16 @@
       opts.staticRenderFns = options.staticRenderFns;
     }
   }
-
+  //功能应该是解析构造函数的options
   function resolveConstructorOptions (Ctor) {
     var options = Ctor.options;
+    //使用Ctor.super判断是否为Vue的子类
     if (Ctor.super) {
+      //根类的options
       var superOptions = resolveConstructorOptions(Ctor.super);
       var cachedSuperOptions = Ctor.superOptions;
+
+      //当为Vue混入一些options时，superOptions会发生变化，此时于之前子类中存储的cachedSuperOptions已经不等，所以下面的操作主要就是更新sub.superOptions
       if (superOptions !== cachedSuperOptions) {
         // super option changed,
         // need to resolve new options.
@@ -5131,8 +5160,20 @@
       var Sub = function VueComponent (options) {
         this._init(options);
       };
+      /**
+       * 继承：
+       * 这里可以解析为:
+       * Super == Vue;
+       * Super.prototype == Vue.prototype
+       * Object.create(Super.prototype) === new Super();
+       * Sub.prototype = Object.create(Super.prototype) === Sub.prototype = new Super();
+       *  */
+
       Sub.prototype = Object.create(Super.prototype);
+      //这个时候Sub.prototype.constructor 指向的是Super
       Sub.prototype.constructor = Sub;
+      //除了constructor，其他属性继承父类Super
+
       Sub.cid = cid++;
       Sub.options = mergeOptions(
         Super.options,
@@ -5410,12 +5451,15 @@
     initAssetRegisters(Vue);
   }
 
+  // 这里开始执行初始化全局变量
   initGlobalAPI(Vue);
 
+  // 为Vue原型定义属性$isServer
   Object.defineProperty(Vue.prototype, '$isServer', {
     get: isServerRendering
   });
 
+  // 为Vue原型定义属性$ssrContext
   Object.defineProperty(Vue.prototype, '$ssrContext', {
     get: function get () {
       /* istanbul ignore next */
@@ -6099,7 +6143,7 @@
       }
     }
 
-    function removeVnodes (parentElm, vnodes, startIdx, endIdx) {
+    function removeVnodes (vnodes, startIdx, endIdx) {
       for (; startIdx <= endIdx; ++startIdx) {
         var ch = vnodes[startIdx];
         if (isDef(ch)) {
@@ -6210,7 +6254,7 @@
         refElm = isUndef(newCh[newEndIdx + 1]) ? null : newCh[newEndIdx + 1].elm;
         addVnodes(parentElm, refElm, newCh, newStartIdx, newEndIdx, insertedVnodeQueue);
       } else if (newStartIdx > newEndIdx) {
-        removeVnodes(parentElm, oldCh, oldStartIdx, oldEndIdx);
+        removeVnodes(oldCh, oldStartIdx, oldEndIdx);
       }
     }
 
@@ -6302,7 +6346,7 @@
           if (isDef(oldVnode.text)) { nodeOps.setTextContent(elm, ''); }
           addVnodes(elm, null, ch, 0, ch.length - 1, insertedVnodeQueue);
         } else if (isDef(oldCh)) {
-          removeVnodes(elm, oldCh, 0, oldCh.length - 1);
+          removeVnodes(oldCh, 0, oldCh.length - 1);
         } else if (isDef(oldVnode.text)) {
           nodeOps.setTextContent(elm, '');
         }
@@ -6531,7 +6575,7 @@
 
           // destroy old node
           if (isDef(parentElm)) {
-            removeVnodes(parentElm, [oldVnode], 0, 0);
+            removeVnodes([oldVnode], 0, 0);
           } else if (isDef(oldVnode.tag)) {
             invokeDestroyHook(oldVnode);
           }

@@ -394,7 +394,8 @@ export function mergeOptions (
   vm?: Component
 ): Object {
   if (process.env.NODE_ENV !== 'production') {
-    checkComponents(child)
+    //就是检查组件，内部遍历了传入的child的components属性检查组件名字是否规范。
+    checkComponents(child) 
   }
 
   if (typeof child === 'function') {

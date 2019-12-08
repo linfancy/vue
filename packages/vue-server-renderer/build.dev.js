@@ -1302,14 +1302,17 @@ function dependArray (value) {
 /*  */
 
 /**
+ * option 重写策略
  * Option overwriting strategies are functions that handle
+ * 用于合并一个父option与子option的值
  * how to merge a parent option value and a child option
  * value into the final value.
  */
+//config.js中定义了strats的类型为 optionMergeStrategies: { [key: string]: Function };
 var strats = config.optionMergeStrategies;
 
 /**
- * Options with restrictions
+ * Options with restrictions 限制规定
  */
 {
   strats.el = strats.propsData = function (parent, child, vm, key) {
@@ -1438,7 +1441,7 @@ function mergeHook (
     ? dedupeHooks(res)
     : res
 }
-
+//挂钩去重
 function dedupeHooks (hooks) {
   var res = [];
   for (var i = 0; i < hooks.length; i++) {
@@ -1677,9 +1680,13 @@ function mergeOptions (
   if (typeof child === 'function') {
     child = child.options;
   }
-
+  // 统一props格式
   normalizeProps(child, vm);
+
+  // 统一inject的格式
   normalizeInject(child, vm);
+
+  // 统一directives的格式
   normalizeDirectives(child);
 
   // Apply extends and mixins on the child options,
@@ -1687,16 +1694,20 @@ function mergeOptions (
   // the result of another mergeOptions call.
   // Only merged options has the _base property.
   if (!child._base) {
+    // 如果存在child.extends
     if (child.extends) {
       parent = mergeOptions(parent, child.extends, vm);
     }
+
+    //如果存在child.mixins
     if (child.mixins) {
       for (var i = 0, l = child.mixins.length; i < l; i++) {
         parent = mergeOptions(parent, child.mixins[i], vm);
       }
     }
   }
-
+  // 针对不同的键值，采用不同的merge策略
+  //采取了对不同的field采取不同的策略，Vue提供了一个strats对象，其本身就是一个hook,如果strats有提供特殊的逻辑，就走strats,否则走默认merge逻辑。
   var options = {};
   var key;
   for (key in parent) {
@@ -3123,7 +3134,7 @@ var startTagOpen = new RegExp(("^<" + qnameCapture));
 var startTagClose = /^\s*(\/?)>/;
 var endTag = new RegExp(("^<\\/" + qnameCapture + "[^>]*>"));
 var doctype = /^<!DOCTYPE [^>]+>/i;
-// #7298: escape - to avoid being pased as HTML comment when inlined in page
+// #7298: escape - to avoid being passed as HTML comment when inlined in page
 var comment = /^<!\--/;
 var conditionalComment = /^<!\[/;
 
@@ -3556,7 +3567,7 @@ function parseString (chr) {
 /*  */
 
 var onRE = /^@|^v-on:/;
-var dirRE = /^v-|^@|^:/;
+var dirRE = /^v-|^@|^:|^#/;
 var forAliasRE = /([\s\S]*?)\s+(?:in|of)\s+([\s\S]*)/;
 var forIteratorRE = /,([^,\}\]]*)(?:,([^,\}\]]*))?$/;
 var stripParensRE = /^\(|\)$/g;
@@ -4782,7 +4793,7 @@ var baseOptions = {
 
 /*  */
 
-var fnExpRE = /^([\w$_]+|\([^)]*?\))\s*=>|^function\s*(?:[\w$]+)?\s*\(/;
+var fnExpRE = /^([\w$_]+|\([^)]*?\))\s*=>|^function(?:\s+[\w$]+)?\s*\(/;
 var fnInvokeRE = /\([^)]*?\);*$/;
 var simplePathRE = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['[^']*?']|\["[^"]*?"]|\[\d+]|\[[A-Za-z_$][\w$]*])*$/;
 
@@ -6022,6 +6033,8 @@ function checkNode (node, warn) {
           var range = node.rawAttrsMap[name];
           if (name === 'v-for') {
             checkFor(node, ("v-for=\"" + value + "\""), warn, range);
+          } else if (name === 'v-slot' || name[0] === '#') {
+            checkFunctionParameterExpression(value, (name + "=\"" + value + "\""), warn, range);
           } else if (onRE.test(name)) {
             checkEvent(value, (name + "=\"" + value + "\""), warn, range);
           } else {
@@ -6095,6 +6108,19 @@ function checkExpression (exp, text, warn, range) {
         range
       );
     }
+  }
+}
+
+function checkFunctionParameterExpression (exp, text, warn, range) {
+  try {
+    new Function(exp, '');
+  } catch (e) {
+    warn(
+      "invalid function parameter expression: " + (e.message) + " in\n\n" +
+      "    " + exp + "\n\n" +
+      "  Raw expression: " + (text.trim()) + "\n",
+      range
+    );
   }
 }
 
@@ -7223,7 +7249,7 @@ function bindDynamicKeys (baseObj, values) {
     if (typeof key === 'string' && key) {
       baseObj[values[i]] = values[i + 1];
     } else if (key !== '' && key !== null) {
-      // null is a speical value for explicitly removing a binding
+      // null is a special value for explicitly removing a binding
       warn(
         ("Invalid value for dynamic directive argument (expected string or null): " + key),
         this
@@ -7798,12 +7824,16 @@ function resolveInject (inject, vm) {
 }
 
 /*  */
-
+//功能应该是解析构造函数的options
 function resolveConstructorOptions (Ctor) {
   var options = Ctor.options;
+  //使用Ctor.super判断是否为Vue的子类
   if (Ctor.super) {
+    //根类的options
     var superOptions = resolveConstructorOptions(Ctor.super);
     var cachedSuperOptions = Ctor.superOptions;
+
+    //当为Vue混入一些options时，superOptions会发生变化，此时于之前子类中存储的cachedSuperOptions已经不等，所以下面的操作主要就是更新sub.superOptions
     if (superOptions !== cachedSuperOptions) {
       // super option changed,
       // need to resolve new options.
