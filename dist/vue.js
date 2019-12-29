@@ -544,9 +544,16 @@
   var nativeWatch = ({}).watch;
 
   var supportsPassive = false;
+  //判断环境是否为浏览器
   if (inBrowser) {
     try {
       var opts = {};
+
+      /**
+       * 保证返回的supportsPassive都是true，并不会被外部改变
+       * 这么写是为了解决这个问题：
+       * 当我试图将Object.defineProperty与访问器属性描述符一起使用时，流检查显示了一个错误。似乎使用Object.defineProperty和不带值的属性描述符不能进行类型检查。
+       */
       Object.defineProperty(opts, 'passive', ({
         get: function get () {
           /* istanbul ignore next */
@@ -587,6 +594,7 @@
     typeof Reflect !== 'undefined' && isNative(Reflect.ownKeys);
 
   var _Set;
+
   /* istanbul ignore if */ // $flow-disable-line
   if (typeof Set !== 'undefined' && isNative(Set)) {
     // use native Set when available.
@@ -627,10 +635,19 @@
 
     warn = function (msg, vm) {
       var trace = vm ? generateComponentTrace(vm) : '';
-
+      /**
+       * Vue 的 warnHandler功能
+       * Vue.config.warnHandler = function(msg, vm, trace){
+       * //trace是组建的继承关系追踪
+       * }
+       * 为Vue运行时警告赋予一个自定义处理的函数，注意这只会在开发者环境下生效，在生产环境下他会被忽略
+       * 就是我们可以通过自定义warnHandler函数做一些项目警告的收集，同样的功能还有errorHandler，如果有需要可以去官方文档看看。
+       * 
+       */
       if (config.warnHandler) {
         config.warnHandler.call(null, msg, vm, trace);
       } else if (hasConsole && (!config.silent)) {
+        //如果没有config.warnHander，则会在控制台打印错误
         console.error(("[Vue warn]: " + msg + trace));
       }
     };
@@ -1444,6 +1461,10 @@
         'should conform to valid custom element name in html5 specification.'
       );
     }
+    /**
+     * ????????
+     * isBuiltInTag(name)这个不知道在干嘛
+     */
     if (isBuiltInTag(name) || config.isReservedTag(name)) {
       warn(
         'Do not use built-in or reserved HTML elements as component ' +
@@ -1492,6 +1513,7 @@
 
   /**
    * Normalize all injections into Object-based format
+   * provide 和 inject 这对选项需要一起使用，以允许一个祖先组件向其所有子孙后代注入一个依赖，不论组件层次有多深，并在起上下游关系成立的时间里始终生效。
    */
   function normalizeInject (options, vm) {
     var inject = options.inject;
@@ -1553,6 +1575,11 @@
   ) {
     {
       //就是检查组件，内部遍历了传入的child的components属性检查组件名字是否规范。
+      /**
+       * 组件名称不可为html tag名称，
+       * 使用 kebab-case(短横线分隔命名) 定义一个组件时，你也必须在引用这个自定义元素时使用 kebab-case，例如 <my-component-name>
+       * 使用 PascalCase(首字母大写命名) 定义一个组件时，你在引用这个自定义元素时两种命名法都可以使用。也就是说 <my-component-name> 和 <MyComponentName> 都是可接受的。
+       */
       checkComponents(child); 
     }
 
@@ -3561,6 +3588,26 @@
 
   function renderMixin (Vue) {
     // install runtime convenience helpers
+    /** 
+     * 把_v,_m等方法挂载到vue原型上
+     * target._o = markOnce
+      target._n = toNumber
+      target._s = toString
+      target._l = renderList
+      target._t = renderSlot
+      target._q = looseEqual
+      target._i = looseIndexOf
+      target._m = renderStatic
+      target._f = resolveFilter
+      target._k = checkKeyCodes
+      target._b = bindObjectProps
+      target._v = createTextVNode
+      target._e = createEmptyVNode
+      target._u = resolveScopedSlots
+      target._g = bindObjectListeners
+      target._d = bindDynamicKeys
+      target._p = prependModifier
+     */
     installRenderHelpers(Vue.prototype);
 
     Vue.prototype.$nextTick = function (fn) {
@@ -4944,15 +4991,26 @@
     }
     return vm.$watch(expOrFn, handler, options)
   }
-
+  /**
+   * 数据绑定 将$watch，$data，$props，$set，$delete加在Vue.prototype上
+   * @param {*} Vue 
+   */
   function stateMixin (Vue) {
     // flow somehow has problems with directly declared definition object
     // when using Object.defineProperty, so we have to procedurally build up
     // the object here.
+    /**
+     * 这种写法有问题，如果其他人使用同样的这个写法，同样可以覆盖掉原来的值
+     * Object.defineProperty(Person, 'name', {
+        value: 'jack',
+        writable: true // 是否可以改变
+      })
+     */
     var dataDef = {};
     dataDef.get = function () { return this._data };
     var propsDef = {};
     propsDef.get = function () { return this._props };
+    // 禁止直接覆盖root数据，只读
     {
       dataDef.set = function () {
         warn(
@@ -4965,6 +5023,7 @@
         warn("$props is readonly.", this);
       };
     }
+    // 将dataDef和propsDef挂在Vue.prototype上
     Object.defineProperty(Vue.prototype, '$data', dataDef);
     Object.defineProperty(Vue.prototype, '$props', propsDef);
 
@@ -5026,6 +5085,14 @@
         initInternalComponent(vm, options);
       } else {
         //mergeOptions主要分成两块，就是resolveConstructorOptions(vm.constructor)和options，mergeOptions这个函数的功能就是要把这两个合在一起。options是我们通过new Vue(options)实例化传入的
+        /**
+         * options:{
+         *  el: '#app-2',
+            data: {
+              message: '页面加载于 ' + new Date().toLocaleString()
+            }
+          }
+         */
         //vm.$options 用于当前 Vue 实例的初始化选项。需要在选项中包含自定义属性时会有用处：
         vm.$options = mergeOptions(
           //解析构造函数的options
@@ -5147,10 +5214,13 @@
 
   //定义了一个_init方法挂载在Vue.prototype上
   initMixin(Vue); 
-
+  //数据绑定，将$watch，$data, $props, $set, $delete加在Vue.prototype上
   stateMixin(Vue);
+  //初始化事件方法，定义$on,$off,$emit，$once到Vue.prototype上
   eventsMixin(Vue);
+  //生命周期方法，定义_update,$forceUpdate,$destroy到Vue.prototype上
   lifecycleMixin(Vue);
+  //渲染方法，用来生成render function 和 VNode
   renderMixin(Vue);
 
   /*  */
@@ -5457,6 +5527,78 @@
   /*  */
   function initGlobalAPI (Vue) {
     // config
+    /**
+     * ?????????
+     * config里面都是一些什么方法
+     * _lifecycleHooks: 在shared/constants.js中定义了：
+        export const LIFECYCLE_HOOKS = [
+          'beforeCreate',
+          'created',
+          'beforeMount',
+          'mounted',
+          'beforeUpdate',
+          'updated',
+          'beforeDestroy',
+          'destroyed',
+          'activated',
+          'deactivated',
+          'errorCaptured',
+          'serverPrefetch'
+        ]
+      async:true
+      devtools:true 
+        务必在加载 Vue 之后，立即同步设置以下内容Vue.config.devtools = true
+        配置是否允许 vue-devtools 检查代码。开发版本默认为 true，生产版本默认为 false。生产版本设为 true 可以启用检查。
+      errorHandler:null
+        指定组件的渲染和观察期间未捕获错误的处理函数。这个处理函数被调用时，可获取错误信息和 Vue 实例。
+        从 2.2.0 起，这个钩子也会捕获组件生命周期钩子里的错误。同样的，当这个钩子是 undefined 时，被捕获的错误会通过 console.error 输出而避免应用崩溃。
+        从 2.4.0 起，这个钩子也会捕获 Vue 自定义事件处理函数内部的错误了。
+        从 2.6.0 起，这个钩子也会捕获 v-on DOM 监听器内部抛出的错误。另外，如果任何被覆盖的钩子或处理函数返回一个 Promise 链 (例如 async 函数)，则来自其 Promise 链的错误也会被处理。
+        Vue.config.errorHandler = function (err, vm, info) {
+          // handle error
+          // `info` 是 Vue 特定的错误信息，比如错误所在的生命周期钩子
+          // 只在 2.2.0+ 可用
+        }
+      getTagNamespace:function noop (a, b, c) { … }
+      ignoredElements:Array(0) []
+        须使 Vue 忽略在 Vue 之外的自定义元素 (e.g. 使用了 Web Components APIs)。否则，它会假设你忘记注册全局组件或者拼错了组件名称，从而抛出一个关于 Unknown custom element 的警告。
+        Vue.config.ignoredElements = [
+          'my-custom-web-component',
+          'another-web-component',
+          // 用一个 `RegExp` 忽略所有“ion-”开头的元素
+          // 仅在 2.5+ 支持
+          /^ion-/
+        ]
+      isReservedAttr:function (a, b, c) { … }
+      isReservedTag:function (a, b, c) { … }
+      isUnknownElement:function (a, b, c) { … }
+      keyCodes:Proxy {}
+        给 v-on 自定义键位别名。
+        Vue.config.keyCodes = {
+          v: 86,
+          f1: 112,
+          // camelCase 不可用
+          mediaPlayPause: 179,
+          // 取而代之的是 kebab-case 且用双引号括起来
+          "media-play-pause": 179,
+          up: [38, 87]
+        }
+        <input type="text" @keyup.media-play-pause="method">
+      mustUseProp:function (a, b, c) { … }
+      optionMergeStrategies:
+        定义Vue.$options中个别参数的合并策略
+        Vue.config.optionMergeStrategies.myOption = function (toVal, fromVal) {// 返回合并后的值}
+      parsePlatformTagName:function (_) { … }
+      performance:false
+        设置为 true 以在浏览器开发工具的性能/时间线面板中启用对组件初始化、编译、渲染和打补丁的性能追踪。只适用于开发模式和支持 performance.mark API 的浏览器上。
+      productionTip:true
+      silent:false
+      warnHandler:null
+        为 Vue 的运行时警告赋予一个自定义处理函数。注意这只会在开发者环境下生效，在生产环境下它会被忽略。
+        Vue.config.warnHandler = function (msg, vm, trace) {
+          // `trace` 是组件的继承关系追踪
+        }
+     */
     var configDef = {};
     configDef.get = function () { return config; };
 
@@ -5468,6 +5610,19 @@
         );
       };
     }
+    /**
+     * 这里定义了Vue.config是一个对象，包含 Vue 的全局配置
+     * 这里可修改的全局配置有：
+     * silent
+        optionMergeStrategies
+        devtools
+        errorHandler
+        warnHandler
+        ignoredElements
+        keyCodes
+        performance
+        productionTip
+     */
     Object.defineProperty(Vue, 'config', configDef);
 
     // exposed util methods.
@@ -5476,8 +5631,14 @@
     // 这些工具方法不视作全局API的一部分，除非你已经意识到某些风险，否则不要去依赖他们
 
     Vue.util = {
-      warn: warn, //来自于 /src/core/util/debug.js
-      extend: extend, // share/utils
+      /**
+       * 来自于 /src/core/util/debug.js
+       * 用过Vue的warnHandler功能应该都知道，这是一个自定义警告处理函数
+       * Vue.config.warnHandler = function(msg, vm, trace)
+       * 这个方法只是在开发者环境下生效，在生产环境下它会被忽略
+       */
+      warn: warn,
+      extend: extend, // /share/utils 作用就是将源对象的属性混入到目标对象。
       mergeOptions: mergeOptions, //作用就是将源对象的属性混入到目标对象。 /core/util/options.js
       defineReactive: defineReactive$$1
     };

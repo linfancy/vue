@@ -10,6 +10,9 @@ import { LIFECYCLE_HOOKS } from 'shared/constants'
 
 export type Config = {
   // user
+  /**
+   * 用户可以重新定义的属性
+   */
   optionMergeStrategies: { [key: string]: Function };
   silent: boolean;
   productionTip: boolean;

@@ -286,6 +286,10 @@ export function validateComponentName (name: string) {
       'should conform to valid custom element name in html5 specification.'
     )
   }
+  /**
+   * ????????
+   * isBuiltInTag(name)这个不知道在干嘛
+   */
   if (isBuiltInTag(name) || config.isReservedTag(name)) {
     warn(
       'Do not use built-in or reserved HTML elements as component ' +
@@ -334,6 +338,7 @@ function normalizeProps (options: Object, vm: ?Component) {
 
 /**
  * Normalize all injections into Object-based format
+ * provide 和 inject 这对选项需要一起使用，以允许一个祖先组件向其所有子孙后代注入一个依赖，不论组件层次有多深，并在起上下游关系成立的时间里始终生效。
  */
 function normalizeInject (options: Object, vm: ?Component) {
   const inject = options.inject
@@ -395,6 +400,11 @@ export function mergeOptions (
 ): Object {
   if (process.env.NODE_ENV !== 'production') {
     //就是检查组件，内部遍历了传入的child的components属性检查组件名字是否规范。
+    /**
+     * 组件名称不可为html tag名称，
+     * 使用 kebab-case(短横线分隔命名) 定义一个组件时，你也必须在引用这个自定义元素时使用 kebab-case，例如 <my-component-name>
+     * 使用 PascalCase(首字母大写命名) 定义一个组件时，你在引用这个自定义元素时两种命名法都可以使用。也就是说 <my-component-name> 和 <MyComponentName> 都是可接受的。
+     */
     checkComponents(child) 
   }
 

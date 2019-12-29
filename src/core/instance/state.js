@@ -315,15 +315,26 @@ function createWatcher (
   }
   return vm.$watch(expOrFn, handler, options)
 }
-
+/**
+ * 数据绑定 将$watch，$data，$props，$set，$delete加在Vue.prototype上
+ * @param {*} Vue 
+ */
 export function stateMixin (Vue: Class<Component>) {
   // flow somehow has problems with directly declared definition object
   // when using Object.defineProperty, so we have to procedurally build up
   // the object here.
+  /**
+   * 这种写法有问题，如果其他人使用同样的这个写法，同样可以覆盖掉原来的值
+   * Object.defineProperty(Person, 'name', {
+      value: 'jack',
+      writable: true // 是否可以改变
+    })
+   */
   const dataDef = {}
   dataDef.get = function () { return this._data }
   const propsDef = {}
   propsDef.get = function () { return this._props }
+  // 禁止直接覆盖root数据，只读
   if (process.env.NODE_ENV !== 'production') {
     dataDef.set = function () {
       warn(
@@ -336,6 +347,7 @@ export function stateMixin (Vue: Class<Component>) {
       warn(`$props is readonly.`, this)
     }
   }
+  // 将dataDef和propsDef挂在Vue.prototype上
   Object.defineProperty(Vue.prototype, '$data', dataDef)
   Object.defineProperty(Vue.prototype, '$props', propsDef)
 

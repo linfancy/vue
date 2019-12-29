@@ -21,9 +21,16 @@ export const isFF = UA && UA.match(/firefox\/(\d+)/)
 export const nativeWatch = ({}).watch
 
 export let supportsPassive = false
+//判断环境是否为浏览器
 if (inBrowser) {
   try {
-    const opts = {}
+    const opts = {};
+
+    /**
+     * 保证返回的supportsPassive都是true，并不会被外部改变
+     * 这么写是为了解决这个问题：
+     * 当我试图将Object.defineProperty与访问器属性描述符一起使用时，流检查显示了一个错误。似乎使用Object.defineProperty和不带值的属性描述符不能进行类型检查。
+     */
     Object.defineProperty(opts, 'passive', ({
       get () {
         /* istanbul ignore next */
@@ -64,6 +71,7 @@ export const hasSymbol =
   typeof Reflect !== 'undefined' && isNative(Reflect.ownKeys)
 
 let _Set
+
 /* istanbul ignore if */ // $flow-disable-line
 if (typeof Set !== 'undefined' && isNative(Set)) {
   // use native Set when available.

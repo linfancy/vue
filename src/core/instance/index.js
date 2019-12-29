@@ -19,10 +19,13 @@ function Vue (options) {
 
 //定义了一个_init方法挂载在Vue.prototype上
 initMixin(Vue) 
-
+//数据绑定，将$watch，$data, $props, $set, $delete加在Vue.prototype上
 stateMixin(Vue)
+//初始化事件方法，定义$on,$off,$emit，$once到Vue.prototype上
 eventsMixin(Vue)
+//生命周期方法，定义_update,$forceUpdate,$destroy到Vue.prototype上
 lifecycleMixin(Vue)
+//渲染方法，用来生成render function 和 VNode
 renderMixin(Vue)
 
 export default Vue

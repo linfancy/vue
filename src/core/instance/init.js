@@ -38,6 +38,14 @@ export function initMixin (Vue: Class<Component>) {
       initInternalComponent(vm, options)
     } else {
       //mergeOptions主要分成两块，就是resolveConstructorOptions(vm.constructor)和options，mergeOptions这个函数的功能就是要把这两个合在一起。options是我们通过new Vue(options)实例化传入的
+      /**
+       * options:{
+       *  el: '#app-2',
+          data: {
+            message: '页面加载于 ' + new Date().toLocaleString()
+          }
+        }
+       */
       //vm.$options 用于当前 Vue 实例的初始化选项。需要在选项中包含自定义属性时会有用处：
       vm.$options = mergeOptions(
         //解析构造函数的options
