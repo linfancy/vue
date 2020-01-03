@@ -50,7 +50,7 @@ export function initMixin (Vue: Class<Component>) {
       vm.$options = mergeOptions(
         //解析构造函数的options
         resolveConstructorOptions(vm.constructor),
-        options || {},
+        options || {}, //options是我们通过new Vue(options)实例化传入的
         vm
       )
     }

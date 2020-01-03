@@ -392,6 +392,11 @@ function assertObjectType (name: string, value: any, vm: ?Component) {
 /**
  * Merge two option objects into a new one.
  * Core utility used in both instantiation and inheritance.
+ * 该函数用于 Vue.mixin
+ * 自定义选项将使用默认策略，即简单地覆盖已有值。如果想让自定义选项以自定义逻辑合并，可以向 Vue.config.optionMergeStrategies 添加一个函数：
+  Vue.config.optionMergeStrategies.myOption = function (toVal, fromVal) {
+    // 返回合并后的值
+  }
  */
 export function mergeOptions (
   parent: Object,
@@ -405,7 +410,7 @@ export function mergeOptions (
      * 使用 kebab-case(短横线分隔命名) 定义一个组件时，你也必须在引用这个自定义元素时使用 kebab-case，例如 <my-component-name>
      * 使用 PascalCase(首字母大写命名) 定义一个组件时，你在引用这个自定义元素时两种命名法都可以使用。也就是说 <my-component-name> 和 <MyComponentName> 都是可接受的。
      */
-    checkComponents(child) 
+    checkComponents(child)
   }
 
   if (typeof child === 'function') {
@@ -417,7 +422,17 @@ export function mergeOptions (
   // 统一inject的格式
   normalizeInject(child, vm)
 
-  // 统一directives的格式
+  // 统一directives的格式：自定义指令
+  /**
+   * 注册一个全局自定义指令 `v-focus`
+    Vue.directive('focus', {
+      // 当被绑定的元素插入到 DOM 中时……
+      inserted: function (el) {
+        // 聚焦元素
+        el.focus()
+      }
+    })
+   */
   normalizeDirectives(child)
 
   // Apply extends and mixins on the child options,

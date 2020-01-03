@@ -38,7 +38,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
         'serverPrefetch'
       ]
     async:true
-    devtools:true 
+    devtools:true
       务必在加载 Vue 之后，立即同步设置以下内容Vue.config.devtools = true
       配置是否允许 vue-devtools 检查代码。开发版本默认为 true，生产版本默认为 false。生产版本设为 true 可以启用检查。
     errorHandler:null
@@ -144,6 +144,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
     observe(obj)
     return obj
   }
+  // ????????
   // 这个options和我们上面用来构造实例的options不一样。这个是Vue默认提供的资源（组件指令过滤器）。
   Vue.options = Object.create(null)
   ASSET_TYPES.forEach(type => {
@@ -156,8 +157,19 @@ export function initGlobalAPI (Vue: GlobalAPI) {
 
   extend(Vue.options.components, builtInComponents)
   // 定义全局方法
+  // Vue.use = function (plugin: Function | Object) {}
   initUse(Vue)
+  // Vue.mixin = function (mixin: Object) {}
+  // 使用 mergeOptions 进行合并
   initMixin(Vue)
+  // Vue.cid = 0
+  // Vue.extend = function (extendOptions: Object): Function {}
   initExtend(Vue)
+  // Vue.component =
+  // Vue.directive =
+  // Vue.filter = function (
+    // id: string,
+    // definition: Function | Object
+    // ): Function | Object | void {}
   initAssetRegisters(Vue)
 }
