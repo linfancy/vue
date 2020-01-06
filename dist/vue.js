@@ -752,7 +752,7 @@
   Dep.prototype.notify = function notify () {
     // stabilize the subscriber list first
     var subs = this.subs.slice();
-    if ( !config.async) {
+    if (!config.async) {
       // subs aren't sorted in scheduler if not running async
       // we need to sort them now to make sure they fire in correct
       // order
@@ -961,7 +961,7 @@
   Observer.prototype.walk = function walk (obj) {
     var keys = Object.keys(obj);
     for (var i = 0; i < keys.length; i++) {
-      defineReactive(obj, keys[i]);
+      defineReactive$$1(obj, keys[i]);
     }
   };
 
@@ -1031,7 +1031,7 @@
 
       当有数据变更时会触发 setter 函数，触发dep.notify()，进而调用Watcher的update，推入Vue的异步观察队列中，最终调用Watch的getter或者cb方法进而调用vm._update(),再调用vm__patch__方法进行虚拟DOM的diff，并最终渲染到页面。
    */
-  function defineReactive (
+  function defineReactive$$1 (
     obj,
     key,
     val,
@@ -1093,7 +1093,7 @@
           return
         }
         /* eslint-enable no-self-compare */
-        if ( customSetter) {
+        if (customSetter) {
           customSetter();
         }
         // #7981: for accessor properties without setter
@@ -1115,8 +1115,7 @@
    * already exist.
    */
   function set (target, key, val) {
-    if (
-      (isUndef(target) || isPrimitive(target))
+    if (isUndef(target) || isPrimitive(target)
     ) {
       warn(("Cannot set reactive property on undefined, null, or primitive value: " + ((target))));
     }
@@ -1134,7 +1133,7 @@
     //判断是否是vue
     var ob = (target).__ob__;
     if (target._isVue || (ob && ob.vmCount)) {
-       warn(
+      warn(
         'Avoid adding reactive properties to a Vue instance or its root $data ' +
         'at runtime - declare it upfront in the data option.'
       );
@@ -1146,7 +1145,7 @@
     }
     // defineReactive方法会改造getter setter方法来收集依赖和通知watcher
     // Dep 主要起到一个纽带的作用，就是连接 reactive data 与 watcher，每一个 reactive data 的创建，都会随着创建一个 dep 实例。
-    defineReactive(ob.value, key, val);
+    defineReactive$$1(ob.value, key, val);
     ob.dep.notify();
     return val
   }
@@ -1155,8 +1154,7 @@
    * Delete a property and trigger change if necessary.
    */
   function del (target, key) {
-    if (
-      (isUndef(target) || isPrimitive(target))
+    if (isUndef(target) || isPrimitive(target)
     ) {
       warn(("Cannot delete reactive property on undefined, null, or primitive value: " + ((target))));
     }
@@ -1166,7 +1164,7 @@
     }
     var ob = (target).__ob__;
     if (target._isVue || (ob && ob.vmCount)) {
-       warn(
+      warn(
         'Avoid deleting properties on a Vue instance or its root $data ' +
         '- just set it to null.'
       );
@@ -1305,7 +1303,7 @@
   ) {
     if (!vm) {
       if (childVal && typeof childVal !== 'function') {
-         warn(
+        warn(
           'The "data" option should be a function ' +
           'that returns a per-instance value in component ' +
           'definitions.',
@@ -1368,7 +1366,7 @@
   ) {
     var res = Object.create(parentVal || null);
     if (childVal) {
-       assertObjectType(key, childVal, vm);
+      assertObjectType(key, childVal, vm);
       return extend(res, childVal)
     } else {
       return res
@@ -1548,9 +1546,9 @@
     var dirs = options.directives;
     if (dirs) {
       for (var key in dirs) {
-        var def = dirs[key];
-        if (typeof def === 'function') {
-          dirs[key] = { bind: def, update: def };
+        var def$$1 = dirs[key];
+        if (typeof def$$1 === 'function') {
+          dirs[key] = { bind: def$$1, update: def$$1 };
         }
       }
     }
@@ -1672,7 +1670,7 @@
     if (hasOwn(assets, PascalCaseId)) { return assets[PascalCaseId] }
     // fallback to prototype chain
     var res = assets[id] || assets[camelizedId] || assets[PascalCaseId];
-    if ( warnMissing && !res) {
+    if (warnMissing && !res) {
       warn(
         'Failed to resolve ' + type.slice(0, -1) + ': ' + id,
         options
@@ -1734,7 +1732,7 @@
     }
     var def = prop.default;
     // warn against non-factory defaults for Object & Array
-    if ( isObject(def)) {
+    if (isObject(def)) {
       warn(
         'Invalid default value for prop "' + key + '": ' +
         'Props with type Object/Array must use a factory function ' +
@@ -2087,6 +2085,8 @@
     }
   }
 
+  /*  */
+
   var mark;
   var measure;
 
@@ -2246,13 +2246,13 @@
   var normalizeEvent = cached(function (name) {
     var passive = name.charAt(0) === '&';
     name = passive ? name.slice(1) : name;
-    var once = name.charAt(0) === '~'; // Prefixed last, checked first
-    name = once ? name.slice(1) : name;
+    var once$$1 = name.charAt(0) === '~'; // Prefixed last, checked first
+    name = once$$1 ? name.slice(1) : name;
     var capture = name.charAt(0) === '!';
     name = capture ? name.slice(1) : name;
     return {
       name: name,
-      once: once,
+      once: once$$1,
       capture: capture,
       passive: passive
     }
@@ -2281,17 +2281,17 @@
     on,
     oldOn,
     add,
-    remove,
+    remove$$1,
     createOnceHandler,
     vm
   ) {
-    var name, def, cur, old, event;
+    var name, def$$1, cur, old, event;
     for (name in on) {
-      def = cur = on[name];
+      def$$1 = cur = on[name];
       old = oldOn[name];
       event = normalizeEvent(name);
       if (isUndef(cur)) {
-         warn(
+        warn(
           "Invalid handler for event \"" + (event.name) + "\": got " + String(cur),
           vm
         );
@@ -2311,7 +2311,7 @@
     for (name in oldOn) {
       if (isUndef(on[name])) {
         event = normalizeEvent(name);
-        remove(event.name, oldOn[name], event.capture);
+        remove$$1(event.name, oldOn[name], event.capture);
       }
     }
   }
@@ -2524,7 +2524,7 @@
       Object.keys(result).forEach(function (key) {
         /* istanbul ignore else */
         {
-          defineReactive(vm, key, result[key], function () {
+          defineReactive$$1(vm, key, result[key], function () {
             warn(
               "Avoid mutating an injected value directly since the changes will be " +
               "overwritten whenever the provided component re-renders. " +
@@ -2767,7 +2767,7 @@
     if (scopedSlotFn) { // scoped slot
       props = props || {};
       if (bindObject) {
-        if ( !isObject(bindObject)) {
+        if (!isObject(bindObject)) {
           warn(
             'slot v-bind without argument expects an Object',
             this
@@ -2843,7 +2843,7 @@
   ) {
     if (value) {
       if (!isObject(value)) {
-         warn(
+        warn(
           'v-bind without argument expects an Object or Array value',
           this
         );
@@ -2951,7 +2951,7 @@
   function bindObjectListeners (data, value) {
     if (value) {
       if (!isPlainObject(value)) {
-         warn(
+        warn(
           'v-on without argument expects an Object value',
           this
         );
@@ -3002,7 +3002,7 @@
       var key = values[i];
       if (typeof key === 'string' && key) {
         baseObj[values[i]] = values[i + 1];
-      } else if ( key !== '' && key !== null) {
+      } else if (key !== '' && key !== null) {
         // null is a special value for explicitly removing a binding
         warn(
           ("Invalid value for dynamic directive argument (expected string or null): " + key),
@@ -3182,6 +3182,12 @@
       to[camelize(key)] = from[key];
     }
   }
+
+  /*  */
+
+  /*  */
+
+  /*  */
 
   /*  */
 
@@ -3447,7 +3453,7 @@
     normalizationType
   ) {
     if (isDef(data) && isDef((data).__ob__)) {
-       warn(
+      warn(
         "Avoid using observed data object as vnode data: " + (JSON.stringify(data)) + "\n" +
         'Always create fresh vnode data objects in each render!',
         context
@@ -3463,8 +3469,7 @@
       return createEmptyVNode()
     }
     // warn against non-primitive key
-    if (
-      isDef(data) && isDef(data.key) && !isPrimitive(data.key)
+    if (isDef(data) && isDef(data.key) && !isPrimitive(data.key)
     ) {
       {
         warn(
@@ -3493,7 +3498,7 @@
       ns = (context.$vnode && context.$vnode.ns) || config.getTagNamespace(tag);
       if (config.isReservedTag(tag)) {
         // platform built-in elements
-        if ( isDef(data) && isDef(data.nativeOn)) {
+        if (isDef(data) && isDef(data.nativeOn)) {
           warn(
             ("The .native modifier for v-on is only valid on components but it was used on <" + tag + ">."),
             context
@@ -3585,10 +3590,10 @@
 
     /* istanbul ignore else */
     {
-      defineReactive(vm, '$attrs', parentData && parentData.attrs || emptyObject, function () {
+      defineReactive$$1(vm, '$attrs', parentData && parentData.attrs || emptyObject, function () {
         !isUpdatingChildComponent && warn("$attrs is readonly.", vm);
       }, true);
-      defineReactive(vm, '$listeners', options._parentListeners || emptyObject, function () {
+      defineReactive$$1(vm, '$listeners', options._parentListeners || emptyObject, function () {
         !isUpdatingChildComponent && warn("$listeners is readonly.", vm);
       }, true);
     }
@@ -3623,7 +3628,7 @@
     Vue.prototype.$nextTick = function (fn) {
       return nextTick(fn, this)
     };
-
+    
     Vue.prototype._render = function () {
       var vm = this;
       var ref = vm.$options;
@@ -3654,7 +3659,7 @@
         // return error render result,
         // or previous vnode to prevent render error causing blank component
         /* istanbul ignore else */
-        if ( vm.$options.renderError) {
+        if (vm.$options.renderError) {
           try {
             vnode = vm.$options.renderError.call(vm._renderProxy, vm.$createElement, e);
           } catch (e) {
@@ -3673,7 +3678,7 @@
       }
       // return empty vnode in case the render function errored out
       if (!(vnode instanceof VNode)) {
-        if ( Array.isArray(vnode)) {
+        if (Array.isArray(vnode)) {
           warn(
             'Multiple root nodes returned from render function. Render function ' +
             'should return a single root node.',
@@ -3776,7 +3781,7 @@
       });
 
       var reject = once(function (reason) {
-         warn(
+        warn(
           "Failed to resolve async component: " + (String(factory)) +
           (reason ? ("\nReason: " + reason) : '')
         );
@@ -3821,8 +3826,7 @@
               timerTimeout = null;
               if (isUndef(factory.resolved)) {
                 reject(
-                   ("timeout (" + (res.timeout) + "ms)")
-                    
+                  "timeout (" + (res.timeout) + "ms)"
                 );
               }
             }, res.timeout);
@@ -3856,6 +3860,8 @@
       }
     }
   }
+
+  /*  */
 
   /*  */
 
@@ -4144,7 +4150,7 @@
 
     var updateComponent;
     /* istanbul ignore if */
-    if ( config.performance && mark) {
+    if (config.performance && mark) {
       updateComponent = function () {
         var name = vm._name;
         var id = vm._uid;
@@ -4409,7 +4415,7 @@
       has[id] = null;
       watcher.run();
       // in dev build, check and stop circular updates.
-      if ( has[id] != null) {
+      if (has[id] != null) {
         circular[id] = (circular[id] || 0) + 1;
         if (circular[id] > MAX_UPDATE_COUNT) {
           warn(
@@ -4495,7 +4501,7 @@
       if (!waiting) {
         waiting = true;
 
-        if ( !config.async) {
+        if (!config.async) {
           flushSchedulerQueue();
           return
         }
@@ -4508,7 +4514,7 @@
 
 
 
-  var uid$1 = 0;
+  var uid$2 = 0;
 
   /**
    * A watcher parses an expression, collects dependencies,
@@ -4538,15 +4544,14 @@
       this.deep = this.user = this.lazy = this.sync = false;
     }
     this.cb = cb;
-    this.id = ++uid$1; // uid for batching
+    this.id = ++uid$2; // uid for batching
     this.active = true;
     this.dirty = this.lazy; // for lazy watchers
     this.deps = [];
     this.newDeps = [];
     this.depIds = new _Set();
     this.newDepIds = new _Set();
-    this.expression =  expOrFn.toString()
-      ;
+    this.expression = expOrFn.toString();
     // parse expression for getter
     if (typeof expOrFn === 'function') {
       this.getter = expOrFn;
@@ -4554,7 +4559,7 @@
       this.getter = parsePath(expOrFn);
       if (!this.getter) {
         this.getter = noop;
-         warn(
+        warn(
           "Failed watching path: \"" + expOrFn + "\" " +
           'Watcher only accepts simple dot-delimited paths. ' +
           'For full control, use a function instead.',
@@ -4772,7 +4777,7 @@
             vm
           );
         }
-        defineReactive(props, key, value, function () {
+        defineReactive$$1(props, key, value, function () {
           if (!isRoot && !isUpdatingChildComponent) {
             warn(
               "Avoid mutating a prop directly since the value will be " +
@@ -4803,7 +4808,7 @@
       : data || {};
     if (!isPlainObject(data)) {
       data = {};
-       warn(
+      warn(
         'data functions should return an object:\n' +
         'https://vuejs.org/v2/guide/components.html#data-Must-Be-a-Function',
         vm
@@ -4825,7 +4830,7 @@
         }
       }
       if (props && hasOwn(props, key)) {
-         warn(
+        warn(
           "The data property \"" + key + "\" is already declared as a prop. " +
           "Use prop default value instead.",
           vm
@@ -4862,7 +4867,7 @@
     for (var key in computed) {
       var userDef = computed[key];
       var getter = typeof userDef === 'function' ? userDef : userDef.get;
-      if ( getter == null) {
+      if (getter == null) {
         warn(
           ("Getter is missing for computed property \"" + key + "\"."),
           vm
@@ -4913,8 +4918,7 @@
         : noop;
       sharedPropertyDefinition.set = userDef.set || noop;
     }
-    if (
-        sharedPropertyDefinition.set === noop) {
+    if (sharedPropertyDefinition.set === noop) {
       sharedPropertyDefinition.set = function () {
         warn(
           ("Computed property \"" + key + "\" was assigned to but it has no setter."),
@@ -5068,18 +5072,18 @@
 
   /*  */
 
-  var uid$2 = 0;
+  var uid$3 = 0;
 
   function initMixin (Vue) {
     Vue.prototype._init = function (options) {
       //this指向Vue
       var vm = this;
       // a uid
-      vm._uid = uid$2++;
+      vm._uid = uid$3++;
 
       var startTag, endTag;
       /* istanbul ignore if */
-      if ( config.performance && mark) {
+      if (config.performance && mark) {
         startTag = "vue-perf-start:" + (vm._uid);
         endTag = "vue-perf-end:" + (vm._uid);
         mark(startTag);
@@ -5139,7 +5143,7 @@
       callHook(vm, 'created');
 
       /* istanbul ignore if */
-      if ( config.performance && mark) {
+      if (config.performance && mark) {
         vm._name = formatComponentName(vm, false);
         mark(endTag);
         measure(("vue " + (vm._name) + " init"), startTag, endTag);
@@ -5214,8 +5218,7 @@
   //这里定义了一个vue class
   // this._init()方法是在 src/core/instance/init.js中定义
   function Vue (options) {
-    if (
-      !(this instanceof Vue)
+    if (!(this instanceof Vue)
     ) {
       warn('Vue is a constructor and should be called with the `new` keyword');
     }
@@ -5290,7 +5293,7 @@
       }
 
       var name = extendOptions.name || Super.options.name;
-      if ( name) {
+      if (name) {
         validateComponentName(name);
       }
 
@@ -5300,10 +5303,11 @@
       /**
        * 继承：
        * 这里可以解析为:
-       * Super == Vue;
+       * Super === Vue;
        * Super.prototype == Vue.prototype
        * Object.create(Super.prototype) === new Super();
        * Sub.prototype = Object.create(Super.prototype) === Sub.prototype = new Super();
+       * 这里只拷贝了Vue的prototype，其他没有拷贝
        *  */
 
       Sub.prototype = Object.create(Super.prototype);
@@ -5312,6 +5316,9 @@
       //除了constructor，其他属性继承父类Super
 
       Sub.cid = cid++;
+      /**
+       * 这里赋值options
+       */
       Sub.options = mergeOptions(
         Super.options,
         extendOptions
@@ -5387,7 +5394,10 @@
           return this.options[type + 's'][id]
         } else {
           /* istanbul ignore if */
-          if ( type === 'component') {
+          if (type === 'component') {
+            /**
+             * 检查组件名称是否合格
+             */
             validateComponentName(id);
           }
           if (type === 'component' && isPlainObject(definition)) {
@@ -5449,9 +5459,9 @@
     keys,
     current
   ) {
-    var cached = cache[key];
-    if (cached && (!current || cached.tag !== current.tag)) {
-      cached.componentInstance.$destroy();
+    var cached$$1 = cache[key];
+    if (cached$$1 && (!current || cached$$1.tag !== current.tag)) {
+      cached$$1.componentInstance.$destroy();
     }
     cache[key] = null;
     remove(keys, key);
@@ -5610,6 +5620,7 @@
       performance:false
         设置为 true 以在浏览器开发工具的性能/时间线面板中启用对组件初始化、编译、渲染和打补丁的性能追踪。只适用于开发模式和支持 performance.mark API 的浏览器上。
       productionTip:true
+        设置为 false 以阻止 vue 在启动时生成生产提示。
       silent:false
       warnHandler:null
         为 Vue 的运行时警告赋予一个自定义处理函数。注意这只会在开发者环境下生效，在生产环境下它会被忽略。
@@ -5658,14 +5669,20 @@
       warn: warn,
       extend: extend, // /share/utils 作用就是将源对象的属性混入到目标对象。
       mergeOptions: mergeOptions, //作用就是将源对象的属性混入到目标对象。 /core/util/options.js
-      defineReactive: defineReactive
+      defineReactive: defineReactive$$1
     };
-    // 这里定义全局属性
+    // // 绑定全局API——Vue.set，Vue.delete，Vue.nextTick
     Vue.set = set;
     Vue.delete = del;
     Vue.nextTick = nextTick;
 
     // 2.6 explicit observable API
+    /**
+     * 随着组件的细化，就会遇到多组件状态共享的情况， Vuex当然可以解决这类问题，不过就像 Vuex官方文档所说的，如果应用不够大，为避免代码繁琐冗余，最好不要使用它
+     * 让一个对象可响应。Vue 内部会用它来处理 data 函数返回的对象。
+     * 返回的对象可以直接用于渲染函数和计算属性内，并且会在发生改变时触发相应的更新。也可以作为最小化的跨组件状态存储器，用于简单的场景：
+     * observable()方法，用于设置监控属性，这样就可以监控viewModule中的属性值的变化，从而就可以动态的改变某个元素中的值，监控属性的类型不变量而是一个函数，通过返回一个函数给viewModule对象中的属性，从而来监控该属性。
+     */
     Vue.observable = function (obj) {
       observe(obj);
       return obj
@@ -5673,20 +5690,40 @@
     // ????????
     // 这个options和我们上面用来构造实例的options不一样。这个是Vue默认提供的资源（组件指令过滤器）。
     Vue.options = Object.create(null);
+    /** 
+    * const ASSET_TYPES = [
+      'component',
+      'directive',
+      'filter'
+    ]
+    */
+
     ASSET_TYPES.forEach(function (type) {
       Vue.options[type + 's'] = Object.create(null);
     });
 
     // this is used to identify the "base" constructor to extend all plain-object
     // components with in Weex's multi-instance scenarios.
+    /**
+      * ?????????
+      * 为什么要定义一个_base=Vue
+      */
     Vue.options._base = Vue;
 
     extend(Vue.options.components, builtInComponents);
     // 定义全局方法
-    // Vue.use = function (plugin: Function | Object) {}
+    
+    /** Vue.use
+      * 这个方法定义了Vue.use的使用，看懂了这个对我们之后直接写Vue插件很有帮助哦~这个方法为Vue.use定义了两种使用方法。第一种就是你写的插件（plugin参数）是一个对象，然后Vue.use会找到这个对象中的install方法作为入口调用，第二种就是你传来的参数就是一个函数，然后直接执行这个函数。当install方法被同一个插件多次调用，插件将只会被安装一次。
+      * Vue.use(VueRouter)
+    */
     initUse(Vue);
-    // Vue.mixin = function (mixin: Object) {}
-    // 使用 mergeOptions 进行合并
+    /** Vue.mixin
+      * 这个方法将你传来的参数对象和vue实例的选项实行合并策略。
+      * 全局注册一个混入，影响注册之后所有创建的每个 Vue 实例。插件作者可以使用混入，向组件注入自定义的行为。不推荐在应用代码中使用。
+      * Vue.mixin = function (mixin: Object) {}
+      * 使用 mergeOptions 进行合并
+    */
     initMixin$1(Vue);
     // Vue.cid = 0
     // Vue.extend = function (extendOptions: Object): Function {}
@@ -5941,7 +5978,7 @@
     if (typeof el === 'string') {
       var selected = document.querySelector(el);
       if (!selected) {
-         warn(
+        warn(
           'Cannot find element: ' + el
         );
         return document.createElement('div')
@@ -6141,13 +6178,13 @@
     }
 
     function createRmCb (childElm, listeners) {
-      function remove () {
-        if (--remove.listeners === 0) {
+      function remove$$1 () {
+        if (--remove$$1.listeners === 0) {
           removeNode(childElm);
         }
       }
-      remove.listeners = listeners;
-      return remove
+      remove$$1.listeners = listeners;
+      return remove$$1
     }
 
     function removeNode (el) {
@@ -6158,7 +6195,7 @@
       }
     }
 
-    function isUnknownElement (vnode, inVPre) {
+    function isUnknownElement$$1 (vnode, inVPre) {
       return (
         !inVPre &&
         !vnode.ns &&
@@ -6207,7 +6244,7 @@
           if (data && data.pre) {
             creatingElmInVPre++;
           }
-          if (isUnknownElement(vnode, creatingElmInVPre)) {
+          if (isUnknownElement$$1(vnode, creatingElmInVPre)) {
             warn(
               'Unknown custom element: <' + tag + '> - did you ' +
               'register the component correctly? For recursive components, ' +
@@ -6231,7 +6268,7 @@
           insert(parentElm, vnode.elm, refElm);
         }
 
-        if ( data && data.pre) {
+        if (data && data.pre) {
           creatingElmInVPre--;
         }
       } else if (isTrue(vnode.isComment)) {
@@ -6305,11 +6342,11 @@
       insert(parentElm, vnode.elm, refElm);
     }
 
-    function insert (parent, elm, ref) {
+    function insert (parent, elm, ref$$1) {
       if (isDef(parent)) {
-        if (isDef(ref)) {
-          if (nodeOps.parentNode(ref) === parent) {
-            nodeOps.insertBefore(parent, elm, ref);
+        if (isDef(ref$$1)) {
+          if (nodeOps.parentNode(ref$$1) === parent) {
+            nodeOps.insertBefore(parent, elm, ref$$1);
           }
         } else {
           nodeOps.appendChild(parent, elm);
@@ -6665,8 +6702,7 @@
             if (isDef(i = data) && isDef(i = i.domProps) && isDef(i = i.innerHTML)) {
               if (i !== elm.innerHTML) {
                 /* istanbul ignore if */
-                if (
-                  typeof console !== 'undefined' &&
+                if (typeof console !== 'undefined' &&
                   !hydrationBailed
                 ) {
                   hydrationBailed = true;
@@ -6691,8 +6727,7 @@
               // longer than the virtual children list.
               if (!childrenMatch || childNode) {
                 /* istanbul ignore if */
-                if (
-                  typeof console !== 'undefined' &&
+                if (typeof console !== 'undefined' &&
                   !hydrationBailed
                 ) {
                   hydrationBailed = true;
@@ -6727,7 +6762,7 @@
     function assertNodeMatch (node, vnode, inVPre) {
       if (isDef(vnode.tag)) {
         return vnode.tag.indexOf('vue-component') === 0 || (
-          !isUnknownElement(vnode, inVPre) &&
+          !isUnknownElement$$1(vnode, inVPre) &&
           vnode.tag.toLowerCase() === (node.tagName && node.tagName.toLowerCase())
         )
       } else {
@@ -7279,7 +7314,7 @@
     // warn prevent and passive modifier
     /* istanbul ignore if */
     if (
-       warn &&
+      warn &&
       modifiers.prevent && modifiers.passive
     ) {
       warn(
@@ -8208,20 +8243,20 @@
 
   /*  */
 
-  function resolveTransition (def) {
-    if (!def) {
+  function resolveTransition (def$$1) {
+    if (!def$$1) {
       return
     }
     /* istanbul ignore else */
-    if (typeof def === 'object') {
+    if (typeof def$$1 === 'object') {
       var res = {};
-      if (def.css !== false) {
-        extend(res, autoCssTransition(def.name || 'v'));
+      if (def$$1.css !== false) {
+        extend(res, autoCssTransition(def$$1.name || 'v'));
       }
-      extend(res, def);
+      extend(res, def$$1);
       return res
-    } else if (typeof def === 'string') {
-      return autoCssTransition(def)
+    } else if (typeof def$$1 === 'string') {
+      return autoCssTransition(def$$1)
     }
   }
 
@@ -8476,7 +8511,7 @@
         : duration
     );
 
-    if ( explicitEnterDuration != null) {
+    if (explicitEnterDuration != null) {
       checkDuration(explicitEnterDuration, 'enter', vnode);
     }
 
@@ -8584,7 +8619,7 @@
         : duration
     );
 
-    if ( isDef(explicitLeaveDuration)) {
+    if (isDef(explicitLeaveDuration)) {
       checkDuration(explicitLeaveDuration, 'leave', vnode);
     }
 
@@ -8701,7 +8736,7 @@
   var transition = inBrowser ? {
     create: _enter,
     activate: _enter,
-    remove: function remove (vnode, rm) {
+    remove: function remove$$1 (vnode, rm) {
       /* istanbul ignore else */
       if (vnode.data.show !== true) {
         leave(vnode, rm);
@@ -8811,7 +8846,7 @@
     var value = binding.value;
     var isMultiple = el.multiple;
     if (isMultiple && !Array.isArray(value)) {
-       warn(
+      warn(
         "<select multiple v-model=\"" + (binding.expression) + "\"> " +
         "expects an Array value for its binding, but got " + (Object.prototype.toString.call(value).slice(8, -1)),
         vm
@@ -8881,10 +8916,10 @@
       var value = ref.value;
 
       vnode = locateNode(vnode);
-      var transition = vnode.data && vnode.data.transition;
+      var transition$$1 = vnode.data && vnode.data.transition;
       var originalDisplay = el.__vOriginalDisplay =
         el.style.display === 'none' ? '' : el.style.display;
-      if (value && transition) {
+      if (value && transition$$1) {
         vnode.data.show = true;
         enter(vnode, function () {
           el.style.display = originalDisplay;
@@ -8901,8 +8936,8 @@
       /* istanbul ignore if */
       if (!value === !oldValue) { return }
       vnode = locateNode(vnode);
-      var transition = vnode.data && vnode.data.transition;
-      if (transition) {
+      var transition$$1 = vnode.data && vnode.data.transition;
+      if (transition$$1) {
         vnode.data.show = true;
         if (value) {
           enter(vnode, function () {
@@ -9028,7 +9063,7 @@
       }
 
       // warn multiple elements
-      if ( children.length > 1) {
+      if (children.length > 1) {
         warn(
           '<transition> can only be used on a single element. Use ' +
           '<transition-group> for lists.',
@@ -9039,8 +9074,7 @@
       var mode = this.mode;
 
       // warn invalid mode
-      if (
-        mode && mode !== 'in-out' && mode !== 'out-in'
+      if (mode && mode !== 'in-out' && mode !== 'out-in'
       ) {
         warn(
           'invalid <transition> mode: ' + mode,
@@ -9339,8 +9373,7 @@
           );
         }
       }
-      if (
-        config.productionTip !== false &&
+      if (config.productionTip !== false &&
         typeof console !== 'undefined'
       ) {
         console[console.info ? 'info' : 'log'](
@@ -9405,7 +9438,7 @@
   function transformNode (el, options) {
     var warn = options.warn || baseWarn;
     var staticClass = getAndRemoveAttr(el, 'class');
-    if ( staticClass) {
+    if (staticClass) {
       var res = parseText(staticClass, options.delimiters);
       if (res) {
         warn(
@@ -9568,8 +9601,8 @@
   function parseHTML (html, options) {
     var stack = [];
     var expectHTML = options.expectHTML;
-    var isUnaryTag = options.isUnaryTag || no;
-    var canBeLeftOpenTag = options.canBeLeftOpenTag || no;
+    var isUnaryTag$$1 = options.isUnaryTag || no;
+    var canBeLeftOpenTag$$1 = options.canBeLeftOpenTag || no;
     var index = 0;
     var last, lastTag;
     while (html) {
@@ -9683,7 +9716,7 @@
 
       if (html === last) {
         options.chars && options.chars(html);
-        if ( !stack.length && options.warn) {
+        if (!stack.length && options.warn) {
           options.warn(("Mal-formatted tag at end of template: \"" + html + "\""), { start: index + html.length });
         }
         break
@@ -9731,12 +9764,12 @@
         if (lastTag === 'p' && isNonPhrasingTag(tagName)) {
           parseEndTag(lastTag);
         }
-        if (canBeLeftOpenTag(tagName) && lastTag === tagName) {
+        if (canBeLeftOpenTag$$1(tagName) && lastTag === tagName) {
           parseEndTag(tagName);
         }
       }
 
-      var unary = isUnaryTag(tagName) || !!unarySlash;
+      var unary = isUnaryTag$$1(tagName) || !!unarySlash;
 
       var l = match.attrs.length;
       var attrs = new Array(l);
@@ -9750,7 +9783,7 @@
           name: args[1],
           value: decodeAttr(value, shouldDecodeNewlines)
         };
-        if ( options.outputSourceRange) {
+        if (options.outputSourceRange) {
           attrs[i].start = args.start + args[0].match(/^\s*/).length;
           attrs[i].end = args.end;
         }
@@ -9787,8 +9820,7 @@
       if (pos >= 0) {
         // Close all the open elements, up the stack
         for (var i = stack.length - 1; i >= pos; i--) {
-          if (
-            (i > pos || !tagName) &&
+          if (i > pos || !tagName &&
             options.warn
           ) {
             options.warn(
@@ -9822,7 +9854,7 @@
   /*  */
 
   var onRE = /^@|^v-on:/;
-  var dirRE =  /^v-|^@|^:|^#/;
+  var dirRE = /^v-|^@|^:|^#/;
   var forAliasRE = /([\s\S]*?)\s+(?:in|of)\s+([\s\S]*)/;
   var forIteratorRE = /,([^,\}\]]*)(?:,([^,\}\]]*))?$/;
   var stripParensRE = /^\(|\)$/g;
@@ -10048,7 +10080,7 @@
 
         if (isForbiddenTag(element) && !isServerRendering()) {
           element.forbidden = true;
-           warn$2(
+          warn$2(
             'Templates should only be responsible for mapping the state to the ' +
             'UI. Avoid placing tags with side-effects in your templates, such as ' +
             "<" + tag + ">" + ', as they will not be parsed.',
@@ -10099,7 +10131,7 @@
         // pop stack
         stack.length -= 1;
         currentParent = stack[stack.length - 1];
-        if ( options.outputSourceRange) {
+        if (options.outputSourceRange) {
           element.end = end$1;
         }
         closeElement(element);
@@ -10168,7 +10200,7 @@
             };
           }
           if (child) {
-            if ( options.outputSourceRange) {
+            if (options.outputSourceRange) {
               child.start = start;
               child.end = end;
             }
@@ -10185,7 +10217,7 @@
             text: text,
             isComment: true
           };
-          if ( options.outputSourceRange) {
+          if (options.outputSourceRange) {
             child.start = start;
             child.end = end;
           }
@@ -10360,7 +10392,7 @@
       if (children[i].type === 1) {
         return children[i]
       } else {
-        if ( children[i].text !== ' ') {
+        if (children[i].text !== ' ') {
           warn$2(
             "text \"" + (children[i].text.trim()) + "\" between v-if and v-else(-if) " +
             "will be ignored.",
@@ -10380,8 +10412,8 @@
   }
 
   function processOnce (el) {
-    var once = getAndRemoveAttr(el, 'v-once');
-    if (once != null) {
+    var once$$1 = getAndRemoveAttr(el, 'v-once');
+    if (once$$1 != null) {
       el.once = true;
     }
   }
@@ -10393,7 +10425,7 @@
     if (el.tag === 'template') {
       slotScope = getAndRemoveAttr(el, 'scope');
       /* istanbul ignore if */
-      if ( slotScope) {
+      if (slotScope) {
         warn$2(
           "the \"scope\" attribute for scoped slots have been deprecated and " +
           "replaced by \"slot-scope\" since 2.5. The new \"slot-scope\" attribute " +
@@ -10406,7 +10438,7 @@
       el.slotScope = slotScope || getAndRemoveAttr(el, 'slot-scope');
     } else if ((slotScope = getAndRemoveAttr(el, 'slot-scope'))) {
       /* istanbul ignore if */
-      if ( el.attrsMap['v-for']) {
+      if (el.attrsMap['v-for']) {
         warn$2(
           "Ambiguous combined usage of slot-scope and v-for on <" + (el.tag) + "> " +
           "(v-for takes higher priority). Use a wrapper <template> for the " +
@@ -10530,7 +10562,7 @@
   function processSlotOutlet (el) {
     if (el.tag === 'slot') {
       el.slotName = getBindingAttr(el, 'name');
-      if ( el.key) {
+      if (el.key) {
         warn$2(
           "`key` does not work on <slot> because slots are abstract outlets " +
           "and can possibly expand into multiple elements. " +
@@ -10574,7 +10606,6 @@
             name = name.slice(1, -1);
           }
           if (
-            
             value.trim().length === 0
           ) {
             warn$2(
@@ -10655,7 +10686,7 @@
             }
           }
           addDirective(el, name, rawName, value, arg, isDynamic, modifiers, list[i]);
-          if ( name === 'model') {
+          if (name === 'model') {
             checkForAliasModel(el, value);
           }
         }
@@ -10709,7 +10740,6 @@
     var map = {};
     for (var i = 0, l = attrs.length; i < l; i++) {
       if (
-        
         map[attrs[i].name] && !isIE && !isEdge
       ) {
         warn$2('duplicate attribute: ' + attrs[i].name, attrs[i]);
@@ -11175,7 +11205,7 @@
   /*  */
 
   function on (el, dir) {
-    if ( dir.modifiers) {
+    if (dir.modifiers) {
       warn("v-on without argument does not support modifiers.");
     }
     el.wrapListeners = function (code) { return ("_g(" + code + "," + (dir.value) + ")"); };
@@ -11300,7 +11330,7 @@
         parent = parent.parent;
       }
       if (!key) {
-         state.warn(
+        state.warn(
           "v-once can only be used inside v-for that is keyed. ",
           el.rawAttrsMap['v-once']
         );
@@ -11360,8 +11390,7 @@
     var iterator1 = el.iterator1 ? ("," + (el.iterator1)) : '';
     var iterator2 = el.iterator2 ? ("," + (el.iterator2)) : '';
 
-    if (
-      state.maybeComponent(el) &&
+    if (state.maybeComponent(el) &&
       el.tag !== 'slot' &&
       el.tag !== 'template' &&
       !el.key
@@ -11493,9 +11522,7 @@
 
   function genInlineTemplate (el, state) {
     var ast = el.children[0];
-    if ( (
-      el.children.length !== 1 || ast.type !== 1
-    )) {
+    if (el.children.length !== 1 || ast.type !== 1) {
       state.warn(
         'Inline-template components must have exactly one child element.',
         { start: el.start }
@@ -11697,15 +11724,15 @@
           dynamic: attr.dynamic
         }); }))
       : null;
-    var bind = el.attrsMap['v-bind'];
-    if ((attrs || bind) && !children) {
+    var bind$$1 = el.attrsMap['v-bind'];
+    if ((attrs || bind$$1) && !children) {
       res += ",null";
     }
     if (attrs) {
       res += "," + attrs;
     }
-    if (bind) {
-      res += (attrs ? '' : ',null') + "," + bind;
+    if (bind$$1) {
+      res += (attrs ? '' : ',null') + "," + bind$$1;
     }
     return res + ')'
   }
@@ -11725,7 +11752,7 @@
     var dynamicProps = "";
     for (var i = 0; i < props.length; i++) {
       var prop = props[i];
-      var value =  transformSpecialNewlines(prop.value);
+      var value = transformSpecialNewlines(prop.value);
       if (prop.dynamic) {
         dynamicProps += (prop.name) + "," + value + ",";
       } else {
@@ -11950,7 +11977,7 @@
       vm
     ) {
       options = extend({}, options);
-      var warn$1 = options.warn || warn;
+      var warn$$1 = options.warn || warn;
       delete options.warn;
 
       /* istanbul ignore if */
@@ -11960,7 +11987,7 @@
           new Function('return 1');
         } catch (e) {
           if (e.toString().match(/unsafe-eval|CSP/)) {
-            warn$1(
+            warn$$1(
               'It seems you are using the standalone build of Vue.js in an ' +
               'environment with Content Security Policy that prohibits unsafe-eval. ' +
               'The template compiler cannot work in this environment. Consider ' +
@@ -11987,14 +12014,14 @@
         if (compiled.errors && compiled.errors.length) {
           if (options.outputSourceRange) {
             compiled.errors.forEach(function (e) {
-              warn$1(
+              warn$$1(
                 "Error compiling template:\n\n" + (e.msg) + "\n\n" +
                 generateCodeFrame(template, e.start, e.end),
                 vm
               );
             });
           } else {
-            warn$1(
+            warn$$1(
               "Error compiling template:\n\n" + template + "\n\n" +
               compiled.errors.map(function (e) { return ("- " + e); }).join('\n') + '\n',
               vm
@@ -12024,7 +12051,7 @@
       /* istanbul ignore if */
       {
         if ((!compiled.errors || !compiled.errors.length) && fnGenErrors.length) {
-          warn$1(
+          warn$$1(
             "Failed to generate render function:\n\n" +
             fnGenErrors.map(function (ref) {
               var err = ref.err;
@@ -12058,7 +12085,7 @@
         };
 
         if (options) {
-          if ( options.outputSourceRange) {
+          if (options.outputSourceRange) {
             // $flow-disable-line
             var leadingSpaceLength = template.match(/^\s*/)[0].length;
 
@@ -12137,6 +12164,7 @@
   /*  */
 
   var ref$1 = createCompiler(baseOptions);
+  var compile = ref$1.compile;
   var compileToFunctions = ref$1.compileToFunctions;
 
   /*  */
@@ -12170,7 +12198,7 @@
 
     /* istanbul ignore if */
     if (el === document.body || el === document.documentElement) {
-       warn(
+      warn(
         "Do not mount Vue to <html> or <body> - mount to normal elements instead."
       );
       return this
@@ -12185,7 +12213,7 @@
           if (template.charAt(0) === '#') {
             template = idToTemplate(template);
             /* istanbul ignore if */
-            if ( !template) {
+            if (!template) {
               warn(
                 ("Template element not found or is empty: " + (options.template)),
                 this
@@ -12205,7 +12233,7 @@
       }
       if (template) {
         /* istanbul ignore if */
-        if ( config.performance && mark) {
+        if (config.performance && mark) {
           mark('compile');
         }
 
@@ -12222,7 +12250,7 @@
         options.staticRenderFns = staticRenderFns;
 
         /* istanbul ignore if */
-        if ( config.performance && mark) {
+        if (config.performance && mark) {
           mark('compile end');
           measure(("vue " + (this._name) + " compile"), 'compile', 'compile end');
         }

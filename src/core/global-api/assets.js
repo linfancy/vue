@@ -19,6 +19,9 @@ export function initAssetRegisters (Vue: GlobalAPI) {
       } else {
         /* istanbul ignore if */
         if (process.env.NODE_ENV !== 'production' && type === 'component') {
+          /**
+           * 检查组件名称是否合格
+           */
           validateComponentName(id)
         }
         if (type === 'component' && isPlainObject(definition)) {

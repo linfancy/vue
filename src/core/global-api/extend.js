@@ -36,10 +36,11 @@ export function initExtend (Vue: GlobalAPI) {
     /**
      * 继承：
      * 这里可以解析为:
-     * Super == Vue;
+     * Super === Vue;
      * Super.prototype == Vue.prototype
      * Object.create(Super.prototype) === new Super();
      * Sub.prototype = Object.create(Super.prototype) === Sub.prototype = new Super();
+     * 这里只拷贝了Vue的prototype，其他没有拷贝
      *  */
 
     Sub.prototype = Object.create(Super.prototype)
@@ -47,7 +48,10 @@ export function initExtend (Vue: GlobalAPI) {
     Sub.prototype.constructor = Sub
     //除了constructor，其他属性继承父类Super
 
-    Sub.cid = cid++
+    Sub.cid = cid++;
+    /**
+     * 这里赋值options
+     */
     Sub.options = mergeOptions(
       Super.options,
       extendOptions
