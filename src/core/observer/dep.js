@@ -9,6 +9,7 @@ let uid = 0
 /**
  * A dep is an observable that can have multiple
  * directives subscribing to it.
+ *  vue 实现的一个处理依赖关系的对象，具体实现在 core/observer/dep.js 中
  */
 export default class Dep {
   static target: ?Watcher;

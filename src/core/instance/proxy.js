@@ -82,9 +82,11 @@ if (process.env.NODE_ENV !== 'production') {
     https://segmentfault.com/a/1190000014824359
   */
   initProxy = function initProxy (vm) {
-    if (hasProxy) {
+    if (hasProxy) {//判断当前环境中Proxy是否可用
       // determine which proxy handler to use
       const options = vm.$options
+      //getHandler方法主要是针对读取代理对象的某个属性时进行的操作。当访问的属性不是string类型或者属性值在被代理的对象上不存在，则抛出错误提示，否则就返回该属性值。
+      //hasHandler方法的应用场景在于查看vm实例是否拥有某个属性。比如拦截in运算符，例如propKey in proxy的操作，但是对for...in循环不生效。，会触发hasHandler方法。
       const handlers = options.render && options.render._withStripped
         ? getHandler
         : hasHandler

@@ -26,20 +26,29 @@ const ALWAYS_NORMALIZE = 2
 // wrapper function for providing a more flexible interface
 // without getting yelled at by flow
 export function createElement (
-  context: Component,
-  tag: any,
-  data: any,
-  children: any,
+  context: Component, // 当前节点上下文
+  tag: any, // 当前节点标签名
+  data: any, //当前节点数据
+  children: any, //当前子节点
   normalizationType: any,
   alwaysNormalize: boolean
 ): VNode | Array<VNode> {
+  /**
+   * isPrimitive:检查值是否合法：return (
+      typeof value === 'string' ||
+      typeof value === 'number' ||
+      // $flow-disable-line
+      typeof value === 'symbol' ||
+      typeof value === 'boolean'
+    )
+   */
   if (Array.isArray(data) || isPrimitive(data)) {
     normalizationType = children
     children = data
     data = undefined
   }
   if (isTrue(alwaysNormalize)) {
-    normalizationType = ALWAYS_NORMALIZE
+    normalizationType = ALWAYS_NORMALIZE //2
   }
   return _createElement(context, tag, data, children, normalizationType)
 }
@@ -87,6 +96,10 @@ export function _createElement (
     data.scopedSlots = { default: children[0] }
     children.length = 0
   }
+  /**
+   * vm._c = (a, b, c, d) => createElement(vm, a, b, c, d, false) simpleNormalizeChildren()
+   * vm.$createElement = (a, b, c, d) => createElement(vm, a, b, c, d, true) normalizeChildren()
+   */
   if (normalizationType === ALWAYS_NORMALIZE) {
     children = normalizeChildren(children)
   } else if (normalizationType === SIMPLE_NORMALIZE) {

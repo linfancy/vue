@@ -15,10 +15,14 @@ export function initExtend (Vue: GlobalAPI) {
 
   /**
    * Class inheritance
+   * Vue.component('modal', {
+        template: '#modal-template'
+      });
+   * extendOptions == {name:"modal",template:"#modal-template"}
    */
   Vue.extend = function (extendOptions: Object): Function {
     extendOptions = extendOptions || {}
-    const Super = this
+    const Super = this //this==Super是Vue
     const SuperId = Super.cid
     const cachedCtors = extendOptions._Ctor || (extendOptions._Ctor = {})
     if (cachedCtors[SuperId]) {
@@ -29,7 +33,7 @@ export function initExtend (Vue: GlobalAPI) {
     if (process.env.NODE_ENV !== 'production' && name) {
       validateComponentName(name)
     }
-
+    // 调用过Vue.extend()方法的返回的都是VueComponent()对象
     const Sub = function VueComponent (options) {
       this._init(options)
     }
@@ -37,14 +41,15 @@ export function initExtend (Vue: GlobalAPI) {
      * 继承：
      * 这里可以解析为:
      * Super === Vue;
-     * Super.prototype == Vue.prototype
-     * Object.create(Super.prototype) === new Super();
+     * Super.prototype === Vue.prototype
+     * Sub.prototype.__proto__ === Super.prototype
      * Sub.prototype = Object.create(Super.prototype) === Sub.prototype = new Super();
      * 这里只拷贝了Vue的prototype，其他没有拷贝
      *  */
 
     Sub.prototype = Object.create(Super.prototype)
-    //这个时候Sub.prototype.constructor 指向的是Super
+    //这个时候Sub.prototype.constructor 原本指向 Sub.prototype.constructor === Super.prototype.constructor === Super
+    //直接修改为指向的是Sub
     Sub.prototype.constructor = Sub
     //除了constructor，其他属性继承父类Super
 

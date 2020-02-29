@@ -10,9 +10,11 @@ import {
 import { updateListeners } from '../vdom/helpers/index'
 
 export function initEvents (vm: Component) {
+  //vm._events表示的是父组件绑定在当前组件上的事件。
   vm._events = Object.create(null)
   vm._hasHookEvent = false
   // init parent attached events
+  //表示父组件绑定在当前组件上的事件,但跟vm._events不一样
   const listeners = vm.$options._parentListeners
   if (listeners) {
     updateComponentListeners(vm, listeners)
@@ -22,6 +24,10 @@ export function initEvents (vm: Component) {
 let target: any
 
 function add (event, fn) {
+  /**
+   * 调用Vue.prototype.$on—在eventsMixin里面定义
+   * vm.$on方法主要就是把传入的方法给push到_events属性里，方便之后被$emit调用。
+   */
   target.$on(event, fn)
 }
 
@@ -61,13 +67,38 @@ export function eventsMixin (Vue: Class<Component>) {
       (vm._events[event] || (vm._events[event] = [])).push(fn)
       // optimize hook:event cost by using a boolean flag marked at registration
       // instead of a hash lookup
+      /**
+       * 关于这句代码的解释，网上很多文章说的都是类似下面的话
+
+          这个bool标志位来表明是否存在钩子，而不需要通过哈希表的方法来查找是否有钩子，这样做可以减少不必要的开销，优化性能。
+          这句话除了是翻译原文注释之外，还存在明显的错误，这个tag不是表明是否存在钩子，而是表示是否使用下面的方式绑定钩子。
+          如果是下列形式绑定的钩子，则_hasHookEvent属性为true。
+          <child
+            @hook:created="hookFromParent"
+          >
+        * 而像下面这种形式，它也存在钩子函数，但是它的_hasHookEvent就是false。
+        const childComponent = Vue.component('child', {
+          ...
+          created () {
+            console.log('child created')
+          }
+        })
+        * 所以_hasHookEvent不是表示是否存在钩子，它表示的是父组件有没有直接绑定钩子函数在当前组件上。
+        * 具体查看callHook(）函数，在instance/init.js中调用：callHook(vm, 'created')
+        * callHook源码：lifecycle.js
+       */
       if (hookRE.test(event)) {
         vm._hasHookEvent = true
       }
     }
     return vm
   }
-
+  /**
+   * on方法包装了event的回调事件，
+   * 这是on和once最本质的区别，
+   * 当触发once绑定的回调时候，执行on方法，先调用$off方法（这个方法是移除监听的方法，我们待会儿就会讲）移除监听，
+   * 然后再执行回调函数。这样就实现了只触发一次的功能，
+   */
   Vue.prototype.$once = function (event: string, fn: Function): Component {
     const vm: Component = this
     function on () {

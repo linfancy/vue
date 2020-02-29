@@ -1,5 +1,8 @@
 /* @flow */
-
+/**
+ * keep-alive是在干嘛的
+ * ????????
+ */
 import { isRegExp, remove } from 'shared/util'
 import { getFirstComponentChild } from 'core/vdom/helpers/index'
 

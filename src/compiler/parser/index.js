@@ -82,23 +82,23 @@ export function parse (
 ): ASTElement | void {
   warn = options.warn || baseWarn
 
-  platformIsPreTag = options.isPreTag || no
-  platformMustUseProp = options.mustUseProp || no
-  platformGetTagNamespace = options.getTagNamespace || no
-  const isReservedTag = options.isReservedTag || no
+  platformIsPreTag = options.isPreTag || no //isPreTag 它是一个函数，其作用是通过给定的标签名字检查标签是否是 'pre' 标签。
+  platformMustUseProp = options.mustUseProp || no //mustUseProp 它是一个函数，其作用是用来检测一个属性在标签中是否要使用props进行绑定。
+  platformGetTagNamespace = options.getTagNamespace || no //getTagNamespace 它也是一个函数，其作用是获取元素(标签)的命名空间。
+  const isReservedTag = options.isReservedTag || no //isReservedTag 它是一个函数，其作用是检查给定的标签是否是保留的标签。
   maybeComponent = (el: ASTElement) => !!el.component || !isReservedTag(el.tag)
 
   transforms = pluckModuleFunction(options.modules, 'transformNode')
   preTransforms = pluckModuleFunction(options.modules, 'preTransformNode')
   postTransforms = pluckModuleFunction(options.modules, 'postTransformNode')
 
-  delimiters = options.delimiters
+  delimiters = options.delimiters //delimiters(改变纯文本插入符)
 
   const stack = []
   const preserveWhitespace = options.preserveWhitespace !== false
   const whitespaceOption = options.whitespace
   let root
-  let currentParent
+  let currentParent //为当前元素的父级元素描述对象
   let inVPre = false
   let inPre = false
   let warned = false
@@ -109,7 +109,7 @@ export function parse (
       warn(msg, range)
     }
   }
-
+  //第一个是对数据状态的还原，第二个是调用后置处理转换钩子函数。
   function closeElement (element) {
     trimEndingWhitespace(element)
     if (!inVPre && !element.processed) {
@@ -117,11 +117,36 @@ export function parse (
     }
     // tree management
     if (!stack.length && element !== root) {
-      // allow root elements with v-if, v-else-if and v-else
+      // allow root elements with v-if, v-else-if and v-else 发现属性有v-if, v-else-if and v-else 
       if (root.if && (element.elseif || element.else)) {
         if (process.env.NODE_ENV !== 'production') {
-          checkRootConstraints(element)
+          checkRootConstraints(element) //函数检查当前元素是否符合作为根元素的要求
         }
+        /**
+         * {
+          type: 1,
+          tag: 'div',
+          ifConditions: [
+            {
+              exp: 'A',
+              block: { type: 1, tag: 'div'}
+            },
+            {
+              exp: 'B',
+              block: { type: 1, tag: 'div'}
+            },
+            {
+              exp: 'C',
+              block: { type: 1, tag: 'div'}
+            },
+            {
+              exp: 'undefined',
+              block: { type: 1, tag: 'div'}
+            }
+          ]
+          // 省略其他属性...
+        }
+         */
         addIfCondition(root, {
           exp: element.elseif,
           block: element
@@ -200,9 +225,9 @@ export function parse (
       )
     }
   }
-
+  //parseHTML 函数的作用就是用来做词法分析的
   parseHTML(template, {
-    warn,
+    warn,//是用来打印警告信息的
     expectHTML: options.expectHTML,
     isUnaryTag: options.isUnaryTag,
     canBeLeftOpenTag: options.canBeLeftOpenTag,
@@ -211,16 +236,16 @@ export function parse (
     shouldKeepComment: options.comments,
     outputSourceRange: options.outputSourceRange,
     start (tag, attrs, unary, start, end) {
-      // check namespace.
+      // check namespace.在start 钩子函数中首先定义了 element 变量，它就是元素节点的描述对象，接着判断root 是否存在，如果不存在则直接将 element 赋值给 root 。
       // inherit parent ns if there is one
       const ns = (currentParent && currentParent.ns) || platformGetTagNamespace(tag)
 
-      // handle IE svg bug
+      // handle IE svg bug:IE11会把svg标签中渲染多余的属性：<svg xmlns:feature="http://www.openplans.org/topp"></svg> 渲染为<svg xmlns:NS1="" NS1:xmlns:feature="http://www.openplans.org/topp"></svg>
       /* istanbul ignore if */
       if (isIE && ns === 'svg') {
-        attrs = guardIESVGBug(attrs)
+        attrs = guardIESVGBug(attrs) 
       }
-
+      //element:结构{type: 1,tag,attrsList: attrs,attrsMap: makeAttrsMap(attrs),rawAttrsMap: {},parent,children: []}
       let element: ASTElement = createASTElement(tag, attrs, currentParent)
       if (ns) {
         element.ns = ns
@@ -248,7 +273,7 @@ export function parse (
           }
         })
       }
-
+      //当定义模板的方式如上，在 <script> 元素上添加 type="text/x-template" 属性。 此时的script不会被禁止。
       if (isForbiddenTag(element) && !isServerRendering()) {
         element.forbidden = true
         process.env.NODE_ENV !== 'production' && warn(
@@ -258,12 +283,13 @@ export function parse (
           { start: element.start }
         )
       }
-
+      //preTransforms 是通过pluckModuleFunction 函数从options.modules 选项中筛选出名字为preTransformNode 函数所组成的数组。实际上 preTransforms 数组中只有一个 preTransformNode 函数该函数只用来处理 input 标签我们在后面章节会来讲它。
       // apply pre-transforms
       for (let i = 0; i < preTransforms.length; i++) {
         element = preTransforms[i](element, options) || element
       }
-
+      //process* 系列函数的作用就是对元素描述对象做进一步处理，比如其中一个函数叫做 processPre，这个函数的作用就是用来检测元素是否拥有v-pre 属性，如果有v-pre 属性则会在 element 描述对象上添加一个 pre 属性，如下：
+      //所有process* 系列函数的作用都是为了让一个元素的描述对象更加充实，使这个对象能更加详细地描述一个元素， 不过我们本节主要总结解析一个开始标签需要做的事情，所以稍后去看这些代码的实现。
       if (!inVPre) {
         processPre(element)
         if (element.pre) {
@@ -278,25 +304,25 @@ export function parse (
       } else if (!element.processed) {
         // structural directives
         processFor(element)
-        processIf(element)
+        processIf(element) //发现元素的属性中有 v-if 或 v-else-if 或 v-else
         processOnce(element)
       }
-
+      //我们知道在编写 Vue 模板的时候会受到两种约束，首先模板必须有且仅有一个被渲染的根元素，第二不能使用 slot 标签和 template 标签作为模板的根元素。
       if (!root) {
         root = element
         if (process.env.NODE_ENV !== 'production') {
-          checkRootConstraints(root)
+          checkRootConstraints(root) //checkRootConstraints 函数内部首先通过判断 el.tag === 'slot' || el.tag === 'template' 来判断根元素是否是slot 标签或 template 标签，如果是则打印警告信息。接着又判断当前元素是否使用了 v-for 指令，因为v-for 指令会渲染多个节点所以根元素是不允许使用 v-for 指令的。
         }
       }
-
-      if (!unary) {
+      //在解析 p 元素的开始标签时，由于 currentParent 变量引用的是 span 元素的描述对象，所以p 元素的描述对象将被添加到 span 元素描述对象的 children 数组中，被误认为是 span 元素的子节点。而事实上 p 标签是 div 元素的子节点，这就是问题所在。为了解决这个问题，就需要我们额外设计一个回退的操作，这个回退的操作就在end钩子函数里面实现。
+      if (!unary) {//这个if条件是当开始标签是非一元标签时才会执行
         currentParent = element
         stack.push(element)
       } else {
-        closeElement(element)
+        closeElement(element) //
       }
     },
-
+    //在解析 p 元素的开始标签时，由于 currentParent 变量引用的是 span 元素的描述对象，所以p 元素的描述对象将被添加到 span 元素描述对象的 children 数组中，被误认为是 span 元素的子节点。而事实上 p 标签是 div 元素的子节点，这就是问题所在。为了解决这个问题，就需要我们额外设计一个回退的操作，这个回退的操作就在end钩子函数里面实现。
     end (tag, start, end) {
       const element = stack[stack.length - 1]
       // pop stack
@@ -309,6 +335,10 @@ export function parse (
     },
 
     chars (text: string, start: number, end: number) {
+      /**
+       * 如果 currentParent 变量不存在说明什么问题？
+       * 1：没有根元素，只有文本。2: 文本在根元素之外。
+       */
       if (!currentParent) {
         if (process.env.NODE_ENV !== 'production') {
           if (text === template) {
@@ -325,7 +355,7 @@ export function parse (
         }
         return
       }
-      // IE textarea placeholder bug
+      // IE textarea placeholder bug:这段代码是用来解决 IE 浏览器中渲染 <textarea> 标签的 placeholder 属性时存在的 bug 的。具体的问题大家可以在这个 issue 查看。
       /* istanbul ignore if */
       if (isIE &&
         currentParent.tag === 'textarea' &&
@@ -334,7 +364,7 @@ export function parse (
         return
       }
       const children = currentParent.children
-      if (inPre || text.trim()) {
+      if (inPre || text.trim()) {//这个嵌套三元表达式判断了条件 inPre || text.trim() 的真假，如果为 true，检测了当前文本节点的父节点是否是文本标签，如果是文本标签则直接使用原始文本，否则使用decodeHTMLCached 函数对文本进行解码。
         text = isTextTag(currentParent) ? text : decodeHTMLCached(text)
       } else if (!children.length) {
         // remove the whitespace-only node right after an opening tag
@@ -347,7 +377,7 @@ export function parse (
         } else {
           text = ' '
         }
-      } else {
+      } else {//inPre || text.trim() 如果为 false，检测 preserveWhitespace 是否为 true 。preserveWhitespace 是一个布尔值代表着是否保留空格，只有它为真的情况下才会保留空格。但即使 preserveWhitespace 常量的值为真，如果当前节点的父节点没有子元素则也不会保留空格，换句话说，编译器只会保留那些 不存在于开始标签之后的空格。
         text = preserveWhitespace ? ' ' : ''
       }
       if (text) {
@@ -357,6 +387,17 @@ export function parse (
         }
         let res
         let child: ?ASTNode
+        /**
+         * res:{
+            expression: "'hello'+_s(message)",
+            tokens: [
+              'hello',
+              {
+                '@binding': 'message'
+              }
+            ]
+          }
+         */
         if (!inVPre && text !== ' ' && (res = parseText(text, delimiters))) {
           child = {
             type: 2,
@@ -398,7 +439,7 @@ export function parse (
   })
   return root
 }
-
+//不需要表达式,用法：跳过这个元素和它的子元素的编译过程。可以用来显示原始 Mustache 标签。跳过大量没有指令的节点会加快编译。
 function processPre (el) {
   if (getAndRemoveAttr(el, 'v-pre') != null) {
     el.pre = true
@@ -911,7 +952,7 @@ function parseModifiers (name: string): Object | void {
     return ret
   }
 }
-
+// 将数组类型的attrs转化成对象
 function makeAttrsMap (attrs: Array<Object>): Object {
   const map = {}
   for (let i = 0, l = attrs.length; i < l; i++) {

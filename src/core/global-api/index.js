@@ -174,6 +174,9 @@ export function initGlobalAPI (Vue: GlobalAPI) {
     */
   Vue.options._base = Vue
 
+  /** 
+  * builtInComponents:keep-alive
+  */
   extend(Vue.options.components, builtInComponents)
   // 定义全局方法
   

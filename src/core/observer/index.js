@@ -39,10 +39,13 @@ export class Observer {
   dep: Dep;
   vmCount: number; // number of vms that have this object as root $data
 
-  constructor (value: any) {
+  constructor (value: any) { //传入的value就是data
     this.value = value
-    this.dep = new Dep()
+    this.dep = new Dep() // 对每个data对象包括子对象都拥有一个该对象, 当所绑定的数据有变更时, 通过dep.notify()通知Watcher。
     this.vmCount = 0
+    // 给value添加__ob__属性，值就是本Observer对象，value.__ob__ = this;
+    // Vue.$data 中每个对象都 __ob__ 属性,包括 Vue.$data对象本身
+    // ????????有什么用
     def(value, '__ob__', this)
     if (Array.isArray(value)) {
       if (hasProto) {
@@ -142,7 +145,7 @@ export function defineReactive (
   customSetter?: ?Function,
   shallow?: boolean
 ) {
-  //创建dep对象手机依赖
+  //创建dep对收集依赖
   const dep = new Dep()
   /**
    * Object.getOwnPropertyDescriptor(obj, prop)方法返回指定对象上一个自有属性对应的属性描述符.

@@ -21,7 +21,7 @@ export function parseText (
   text: string,
   delimiters?: [string, string]
 ): TextParseResult | void {
-  const tagRE = delimiters ? buildRegex(delimiters) : defaultTagRE
+  const tagRE = delimiters ? buildRegex(delimiters) : defaultTagRE //delimiters 是编译器的一个用户自定义选项delimiters ，通过它可以改变文本插入分隔符。defaultTagRE:\{\{((?:.|\r?\n)+?)\}\}/g
   if (!tagRE.test(text)) {
     return
   }
@@ -29,7 +29,7 @@ export function parseText (
   const rawTokens = []
   let lastIndex = tagRE.lastIndex = 0
   let match, index, tokenValue
-  while ((match = tagRE.exec(text))) {
+  while ((match = tagRE.exec(text))) { // tagRE:/\{\{((?:.|\r?\n)+?)\}\}/g
     index = match.index
     // push text token
     if (index > lastIndex) {
@@ -37,7 +37,7 @@ export function parseText (
       tokens.push(JSON.stringify(tokenValue))
     }
     // tag token
-    const exp = parseFilters(match[1].trim())
+    const exp = parseFilters(match[1].trim()) //vue的过滤
     tokens.push(`_s(${exp})`)
     rawTokens.push({ '@binding': exp })
     lastIndex = index + match[0].length

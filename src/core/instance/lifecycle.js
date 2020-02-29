@@ -33,6 +33,12 @@ export function initLifecycle (vm: Component) {
   const options = vm.$options
 
   // locate first non-abstract parent
+  // 定位第一个"非抽象"的父组件
+  /**
+   * <keep-alive> 是一个抽象组件：它自身不会渲染一个 DOM 元素，也不会出现在组件的父组件链中。:https://cn.vuejs.org/v2/api/#keep-alive 
+   * 当组件在 <keep-alive> 内被切换，它的 activated 和 deactivated 这两个生命周期钩子函数将会被对应执行。
+   * 在 2.2.0 及其更高版本中，activated 和 deactivated 将会在 <keep-alive> 树内的所有嵌套组件中触发。
+   */
   let parent = options.parent
   if (parent && !options.abstract) {
     while (parent.$options.abstract && parent.$parent) {
@@ -41,18 +47,18 @@ export function initLifecycle (vm: Component) {
     parent.$children.push(vm)
   }
 
-  vm.$parent = parent
-  vm.$root = parent ? parent.$root : vm
+  vm.$parent = parent //指定已创建的实例之父实例，在两者之间建立父子关系。子实例可以用 this.$parent 访问父实例，子实例被推入父实例的 $children 数组中。
+  vm.$root = parent ? parent.$root : vm //当前组件树的根 Vue 实例。如果当前实例没有父实例，此实例将会是其自己。
 
-  vm.$children = []
-  vm.$refs = {}
+  vm.$children = [] //当前实例的直接子组件。需要注意 $children 并不保证顺序，也不是响应式的。
+  vm.$refs = {} //一个对象，持有已注册过 ref 的所有子组件。
 
-  vm._watcher = null
-  vm._inactive = null
-  vm._directInactive = false
-  vm._isMounted = false
-  vm._isDestroyed = false
-  vm._isBeingDestroyed = false
+  vm._watcher = null //组件实例相应的 watcher 实例对象。
+  vm._inactive = null //表示keep-alive中组件状态，如被激活，该值为false,反之为true。
+  vm._directInactive = false //也是表示keep-alive中组件状态的属性。
+  vm._isMounted = false //当前实例是否完成挂载(对应生命周期图示中的mounted)。
+  vm._isDestroyed = false //当前实例是否已经被销毁(对应生命周期图示中的destroyed)。
+  vm._isBeingDestroyed = false //当前实例是否正在被销毁,还没有销毁完成(介于生命周期图示中deforeDestroy和destroyed之间)。
 }
 
 export function lifecycleMixin (Vue: Class<Component>) {
@@ -332,7 +338,16 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
     callHook(vm, 'deactivated')
   }
 }
-
+/**
+ * 当前实例的钩子函数如果是通过父组件的:hook方式来指定的，
+ * 那么它在执行钩子函数的回调方法时就是直接触发vm.$emit来执行。（这种方式类似于dom中的addEventListener监听事件和dispatchEvent触发事件）
+ * 如果不是上面这种方法指定的钩子函数，
+ * 就需要执行callhook源码上半部分的代码逻辑。
+ * 找到vm实例上的钩子函数，然后执行绑定在它上面的回调。
+ * 至于执行效率的问题，没有去研究过，但是原文注释里都说了是优化钩子，那么证明第一种方法执行效率应该是优于第二种方法。
+ * @param {*} vm 
+ * @param {*} hook 
+ */
 export function callHook (vm: Component, hook: string) {
   // #7573 disable dep collection when invoking lifecycle hooks
   pushTarget()

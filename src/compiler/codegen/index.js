@@ -20,18 +20,18 @@ export class CodegenState {
   onceId: number;
   staticRenderFns: Array<string>;
   pre: boolean;
-
+  //CodegenState 构造函数中给实例初始化一些属性
   constructor (options: CompilerOptions) {
     this.options = options
     this.warn = options.warn || baseWarn
     this.transforms = pluckModuleFunction(options.modules, 'transformCode')
     this.dataGenFns = pluckModuleFunction(options.modules, 'genData')
-    this.directives = extend(extend({}, baseDirectives), options.directives)
+    this.directives = extend(extend({}, baseDirectives), options.directives)//directives属性是一个包括如下字段的对象， v-bind、v-model、v-text、v-html、v-on、内置指令对应 处理函数。
     const isReservedTag = options.isReservedTag || no
-    this.maybeComponent = (el: ASTElement) => !!el.component || !isReservedTag(el.tag)
+    this.maybeComponent = (el: ASTElement) => !!el.component || !isReservedTag(el.tag) //maybeComponent 检测元素是否为组件。
     this.onceId = 0
-    this.staticRenderFns = []
-    this.pre = false
+    this.staticRenderFns = [] //staticRenderFns 存放静态根节点的render 函数。
+    this.pre = false //pre 属性是一个布尔值，它的真假代表着标签是否使用了 v-pre 指令默认 false。
   }
 }
 
@@ -45,7 +45,7 @@ export function generate (
   options: CompilerOptions
 ): CodegenResult {
   const state = new CodegenState(options)
-  const code = ast ? genElement(ast, state) : '_c("div")'
+  const code = ast ? genElement(ast, state) : '_c("div")' //有值就调用genElement函数生成渲染函数所需的如下字符串。
   return {
     render: `with(this){return ${code}}`,
     staticRenderFns: state.staticRenderFns
@@ -53,21 +53,21 @@ export function generate (
 }
 
 export function genElement (el: ASTElement, state: CodegenState): string {
-  if (el.parent) {
+  if (el.parent) { //ast 中 parent属性是否有值，有值表示还有父节点
     el.pre = el.pre || el.parent.pre
   }
 
-  if (el.staticRoot && !el.staticProcessed) {
+  if (el.staticRoot && !el.staticProcessed) {//ast 中 staticRoot属性是否有值 ，如果为true表示静态根节点。 当静态根节点已经解析过了会给ast 添加 staticProcessed 标记。
     return genStatic(el, state)
-  } else if (el.once && !el.onceProcessed) {
+  } else if (el.once && !el.onceProcessed) { //参考文档 v-once 只渲染元素和组件一次。随后的重新渲染，元素/组件及其所有的子节点将被视为静态内容并跳过
     return genOnce(el, state)
-  } else if (el.for && !el.forProcessed) {
+  } else if (el.for && !el.forProcessed) { //判断标签是否含有v-for属性, 解析v-for指令中的参数 , 调用genFor函数并且返回生成虚拟dom渲染函数所需对应的参数格式。
     return genFor(el, state)
-  } else if (el.if && !el.ifProcessed) {
+  } else if (el.if && !el.ifProcessed) {//判断标签是否含有if属性, 解析 if指令中的参数 , 调用genIf函数并且返回生成虚拟dom渲染函数所需对应的参数格式。 
     return genIf(el, state)
-  } else if (el.tag === 'template' && !el.slotTarget && !state.pre) {
+  } else if (el.tag === 'template' && !el.slotTarget && !state.pre) { //标签是模板template,调用genChildren获取虚拟dom子节点
     return genChildren(el, state) || 'void 0'
-  } else if (el.tag === 'slot') {
+  } else if (el.tag === 'slot') { //如果标签是插槽, 调用 genSlot 函数并且返回生成虚拟dom渲染函数所需对应的参数格式。
     return genSlot(el, state)
   } else {
     // component or element

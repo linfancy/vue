@@ -31,7 +31,7 @@ import {
 const sharedPropertyDefinition = {
   enumerable: true,
   configurable: true,
-  get: noop,
+  get: noop,//noop:空操作
   set: noop
 }
 
@@ -143,7 +143,7 @@ function initData (vm: Component) {
         `Use prop default value instead.`,
         vm
       )
-    } else if (!isReserved(key)) {
+    } else if (!isReserved(key)) { //检查是否以 $ 或者 _ 开头
       proxy(vm, `_data`, key)
     }
   }

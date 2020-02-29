@@ -48,6 +48,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 /**
  * Helper that recursively merges two data objects together.
+ * mergeData的逻辑是，如果from对象中有to对象里没有的属性，则调用set方法，（这里的set就是Vue.$set，先可以简单理解为对象设置属性。之后会细讲）如果from和to中有相同的key值，且key对应的value是对象，则会递归调用mergeData方法，否则以to的值为准，最后返回to对象。
  */
 function mergeData (to: Object, from: ?Object): Object {
   if (!from) return to
@@ -78,12 +79,17 @@ function mergeData (to: Object, from: ?Object): Object {
 
 /**
  * Data
+ * 
  */
 export function mergeDataOrFn (
   parentVal: any,
   childVal: any,
   vm?: Component
 ): ?Function {
+  /**
+   * 如果新建实例时传入的options上有data属性，则调用mergeData方法合并实例上的data属性和其构造函数options上的data属性（如果有的话）
+   * 第二种情况，当前调用mergeOptions操作的不是vm实例（即通过Vue.extend/Vue.component调用了mergeOptions方法）
+   */
   if (!vm) {
     // in a Vue.extend merge, both should be functions
     if (!childVal) {
@@ -145,6 +151,10 @@ strats.data = function (
 
 /**
  * Hooks and props are merged as arrays.
+ * (1) child options上不存在该属性，parent options上存在,则返回parent上的属性。
+ * （2）child和parent都存在该属性，则返回concat之后的属性
+ * （3）child上存在该属性，parent不存在，且child上的该属性是Array，则直接返回child上的该属性
+ * (4) child上存在该属性，parent不存在，且child上的该属性不是Array，则把该属性先转换成Array,再返回。
  */
 function mergeHook (
   parentVal: ?Array<Function>,
@@ -157,6 +167,10 @@ function mergeHook (
         ? childVal
         : [childVal]
     : parentVal
+
+  /**
+   * 如果存在该挂钩事件，则去除原有的
+   */
   return res
     ? dedupeHooks(res)
     : res
@@ -171,7 +185,20 @@ function dedupeHooks (hooks) {
   }
   return res
 }
-
+/**
+ * 0:"beforeCreate"
+1:"created"
+2:"beforeMount"
+3:"mounted"
+4:"beforeUpdate"
+5:"updated"
+6:"beforeDestroy"
+7:"destroyed"
+8:"activated"
+9:"deactivated"
+10:"errorCaptured"
+11:"serverPrefetch"
+ */
 LIFECYCLE_HOOKS.forEach(hook => {
   strats[hook] = mergeHook
 })
@@ -198,6 +225,14 @@ function mergeAssets (
   }
 }
 
+/**
+ * 0:"component"
+  1:"directive"
+  2:"filter"
+
+  * components/directives/filters这几个属性的处理逻辑如下
+
+ */
 ASSET_TYPES.forEach(function (type) {
   strats[type + 's'] = mergeAssets
 })
@@ -240,6 +275,10 @@ strats.watch = function (
 
 /**
  * Other object hashes.
+ * props,methods,inject,computed等属性的合并策略。
+ * 如果child options上这些属性存在，则先判断它们是不是对象。
+（1）如果parent options上没有该属性，则直接返回child options上的该属性
+（2）如果parent options和child options都有，则合并parent options和child options并生成一个新的对象。(如果parent和child上有同名属性，合并后的以child options上的为准)
  */
 strats.props =
 strats.methods =
@@ -263,6 +302,7 @@ strats.provide = mergeDataOrFn
 
 /**
  * Default strategy.
+ * defaultStrat的逻辑是，如果child上该属性值存在时，就取child上的该属性值，如果不存在，则取parent上的该属性值。
  */
 const defaultStrat = function (parentVal: any, childVal: any): any {
   return childVal === undefined
@@ -278,7 +318,11 @@ function checkComponents (options: Object) {
     validateComponentName(key)
   }
 }
-
+/**
+ * 包含数字，字母，下划线，连接符，并且以字母开头
+  是否和html标签名称或svg标签名称相同
+  是否和关键字名称相同，如undefined, infinity等
+ */
 export function validateComponentName (name: string) {
   if (!new RegExp(`^[a-zA-Z][\\-\\.0-9_${unicodeRegExp.source}]*$`).test(name)) {
     warn(
@@ -393,6 +437,7 @@ function assertObjectType (name: string, value: any, vm: ?Component) {
  * Merge two option objects into a new one.
  * Core utility used in both instantiation and inheritance.
  * 该函数用于 Vue.mixin
+ * mergeoptions方法是要合并构造函数和传入的options这两个对象。
  * 自定义选项将使用默认策略，即简单地覆盖已有值。如果想让自定义选项以自定义逻辑合并，可以向 Vue.config.optionMergeStrategies 添加一个函数：
   Vue.config.optionMergeStrategies.myOption = function (toVal, fromVal) {
     // 返回合并后的值
@@ -416,6 +461,8 @@ export function mergeOptions (
   if (typeof child === 'function') {
     child = child.options
   }
+  // options中的props,inject,directives属性转换成对象的形式
+
   // 统一props格式
   normalizeProps(child, vm)
 
@@ -432,6 +479,18 @@ export function mergeOptions (
         el.focus()
       }
     })
+    * normalizeDirectives构造函数会把这个指令传入的参数，最终转换成下面这种形式
+    * Vue.directive('color', function (el, binding) {
+        el.style.backgroundColor = binding.value
+      })
+    * color: {
+        bind: function (el, binding) {
+          el.style.backgroundColor = binding.value
+        },
+        update: function (el, binding) {
+          el.style.backgroundColor = binding.value
+        }
+      }
    */
   normalizeDirectives(child)
 
@@ -439,6 +498,37 @@ export function mergeOptions (
   // but only if it is a raw options object that isn't
   // the result of another mergeOptions call.
   // Only merged options has the _base property.
+  /**
+   * 当传入的options里有mixin或者extends属性时，再次调用mergeOptions方法合并mixins和extends里的内容到实例的构造函数options上（即parent options）比如下面这种情况
+   * 就会把传入的mounted, created钩子处理函数，还有methods方法提出来去和parent options做合并处理。
+   * 弄明白了这点我们继续回到mergeOptions的代码
+   * const childComponent = Vue.component('child', {
+          ...
+          mixins: [myMixin],
+          extends: myComponent
+          ...
+    })
+    const myMixin = {
+          created: function () {
+            this.hello()
+          },
+          methods: {
+            hello: function () {
+              console.log('hello from mixin')
+          }
+        }
+      }
+    const myComponent = {
+          mounted: function () {
+            this.goodbye()
+          },
+          methods: {
+            goodbye: function () {
+              console.log('goodbye from mixin')
+            }
+        }
+      }
+   */
   if (!child._base) {
     // 如果存在child.extends
     if (child.extends) {
@@ -464,6 +554,33 @@ export function mergeOptions (
       mergeField(key)
     }
   }
+  /**
+   * activated:function mergeHook (\n    parentVal,\n    childVal\n  ) { … }
+      beforeCreate:function mergeHook (\n    parentVal,\n    childVal\n  ) { … }
+      beforeDestroy:function mergeHook (\n    parentVal,\n    childVal\n  ) { … }
+      beforeMount:function mergeHook (\n    parentVal,\n    childVal\n  ) { … }
+      beforeUpdate:function mergeHook (\n    parentVal,\n    childVal\n  ) { … }
+      components:function mergeAssets (\n    parentVal,\n    childVal,\n    vm,\n    key\n  ) { … }
+      computed:function (\n    parentVal,\n    childVal,\n    vm,\n    key\n  ) { … }
+      created:function mergeHook (\n    parentVal,\n    childVal\n  ) { … }
+      data:function (\n    parentVal,\n    childVal,\n    vm\n  ) { … }
+      deactivated:function mergeHook (\n    parentVal,\n    childVal\n  ) { … }
+      destroyed:function mergeHook (\n    parentVal,\n    childVal\n  ) { … }
+      directives:function mergeAssets (\n    parentVal,\n    childVal,\n    vm,\n    key\n  ) { … }
+      el:function (parent, child, vm, key) { … }
+      errorCaptured:function mergeHook (\n    parentVal,\n    childVal\n  ) { … }
+      filters:function mergeAssets (\n    parentVal,\n    childVal,\n    vm,\n    key\n  ) { … }
+      inject:function (\n    parentVal,\n    childVal,\n    vm,\n    key\n  ) { … }
+      methods:function (\n    parentVal,\n    childVal,\n    vm,\n    key\n  ) { … }
+      mounted:function mergeHook (\n    parentVal,\n    childVal\n  ) { … }
+      props:function (\n    parentVal,\n    childVal,\n    vm,\n    key\n  ) { … }
+      propsData:function (parent, child, vm, key) { … }
+      provide:function mergeDataOrFn (\n    parentVal,\n    childVal,\n    vm\n  ) { … }
+      serverPrefetch:function mergeHook (\n    parentVal,\n    childVal\n  ) { … }
+      updated:function mergeHook (\n    parentVal,\n    childVal\n  ) { … }
+      watch:function (\n    parentVal,\n    childVal,\n    vm,\n    key\n  ) { … }
+   * @param {*} key 
+   */
   function mergeField (key) {
     const strat = strats[key] || defaultStrat
     options[key] = strat(parent[key], child[key], vm, key)

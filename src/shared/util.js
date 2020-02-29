@@ -1,5 +1,13 @@
 /* @flow */
 
+/**
+ * Object.freeze()方法接收一个参数，如果此参数是一个对象，则此方法把这个对象冻结，如果是其他类型则不会报错，无影响。
+ * 被冻结的对象不能修改、添加、删除其属性或者属性值
+ * let obj = {"a":5};
+    Object.freeze(obj); //return 此obj
+    obj.a = 3; //不会报错
+    console.log(obj); //仍然是 {"a":5}
+ */
 export const emptyObject = Object.freeze({})
 
 // These helpers produce better VM code in JS engines due to their
@@ -22,6 +30,7 @@ export function isFalse (v: any): boolean %checks {
 
 /**
  * Check if value is primitive.
+ * 检查值是否合法
  */
 export function isPrimitive (value: any): boolean %checks {
   return (
